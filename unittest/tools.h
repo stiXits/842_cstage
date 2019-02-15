@@ -1,0 +1,1 @@
+bool assertArraysAreEqual(uint8_t* array0, uint8_t* array1, int size);
