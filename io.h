@@ -1,10 +1,12 @@
+#pragma once
+
 #include "settings.h"
 
+#include <ap_int.h>
 #include <stdint.h>
 
 struct outputChunkPointer {
-
-    uint8_t* byteIndex;
+    uint32_t byteIndex;
 
     // the offset points to within the first byte, thus 3 bits will be sufficient
     uint8_t offset;
@@ -21,6 +23,13 @@ struct outputChunkPointer {
         offset = accu % 8;
     }
 
+    uint32_t lsB() {
+    	return byteIndex;
+    }
+
+    uint32_t msB() {
+    	return byteIndex + 1;
+    }
 };
 
 struct inputChunkPointer {
@@ -43,21 +52,29 @@ struct inputChunkPointer {
         offset = accu % 8;
     }
 
+    uint32_t lsB() {
+    	return byteIndex;
+    }
+
+    uint32_t msB() {
+    	return byteIndex + 1;
+    }
+
 };
 
 struct chunk {
-    uint8_t data[CHUNK_SIZE];
+	ap_uint<8> data[CHUNK_SIZE];
     uint8_t opCode;
 };
 
 // the chunk lies within an aligned data block (no opcodes before data bytes), so a pointer suffices to address it
-void appendUncompressedChunk(const uint8_t opCode, const uint8_t *chunk, outputChunkPointer &destination);
-void appendUncompressedByte(const uint8_t *source, uint8_t *destination0, uint8_t *destination1, const uint8_t &offset);
+ap_uint<69> appendCompressedChunk(const uint8_t opCode, const ap_uint<8> &chunk);
+void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const uint8_t &offset);
 
-void readNextCompressedByte(inputChunkPointer &readHead, const uint8_t *input, uint8_t *outPutChunk);
+uint8_t readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input);
 
 // compressed chunks are preceded by a 5 bit opcode, so they can't be addressed by a byte pointer, the chunkdata will
 // be copied to the chunk data structure
-void readNextCompressedChunk(inputChunkPointer &readHead, const uint8_t* input, struct chunk &outputChunk);
+void readNextCompressedChunk(inputChunkPointer &readHead, const ap_uint<8>* input, struct chunk &outputChunk);
 
-uint8_t extractOpcode(uint8_t lsB, uint8_t msB, inputChunkPointer &readHead);
+uint8_t extractOpcode(uint8_t offset, ap_uint<16> input);

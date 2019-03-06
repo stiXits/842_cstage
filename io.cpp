@@ -1,8 +1,9 @@
 #include "io.h"
+#include "ap_int.h"
 
 #include "settings.h"
 
-void appendUncompressedByte(const uint8_t *source, uint8_t *destination0, uint8_t *destination1, const uint8_t &offset){
+void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const uint8_t &offset){
 
     // copy source chunk
     uint8_t rightshifted = *source;
@@ -19,90 +20,68 @@ void appendUncompressedByte(const uint8_t *source, uint8_t *destination0, uint8_
     *destination1 = leftshifted;
 }
 
-void appendUncompressedChunk(const uint8_t opCode, const uint8_t *chunk, outputChunkPointer &destination) {
+ap_uint<69> appendCompressedChunk(const uint8_t opCode, const ap_uint<8> &chunk) {
 
-    // shift opcode to the left
-    uint8_t shiftedOpcode = opCode << (8 - OPCODE_LENGHT);
-
-    // write opcode to destination
-    uint8_t *lsB = destination.byteIndex;
-    uint8_t *msB = destination.byteIndex + 1;
-    appendUncompressedByte(&shiftedOpcode, lsB, msB, destination.offset);
-
-    // increment writehead
-    destination.increment(OPCODE_LENGHT);
-
-    // Todo: use smaller int type for byteIndex
-    for (uint8_t byteIndex = 0; byteIndex < CHUNK_SIZE; byteIndex++) {
-
-        //acquire addresses of the next 2 bytes
-        uint8_t *lsB = destination.byteIndex;
-        uint8_t *msB = destination.byteIndex + 1;
-
-        // set source to current byte of chunk
-        const uint8_t *source = chunk + byteIndex;
-
-        appendUncompressedByte(source, lsB, msB, destination.offset);
-
-        // increment writehead
-        destination.increment(8);
-    }
+	return (opCode, chunk.data[0], chunk.data[1], chunk.data[2], chunk.data[3], chunk.data[4], chunk.data[5], chunk.data[6], chunk.data[7]);
+//    // shift opcode to the left
+//	ap_uint<8> shiftedOpcode = opCode << (8 - OPCODE_LENGHT);
+//
+//    // write opcode to destination
+//	ap_uint<8> *lsB = destination.byteIndex;
+//	ap_uint<8> *msB = destination.byteIndex + 1;
+//    appendUncompressedByte(&shiftedOpcode, lsB, msB, destination.offset);
+//
+//    // increment writehead
+//    destination.increment(OPCODE_LENGHT);
+//
+//    // Todo: use smaller int type for byteIndex
+//    for (uint8_t byteIndex = 0; byteIndex < CHUNK_SIZE; byteIndex++) {
+//
+//        //acquire addresses of the next 2 bytes
+//        uint8_t *ap_uint<8> = destination.byteIndex;
+//        uint8_t *ap_uint<8> = destination.byteIndex + 1;
+//
+//        // set source to current byte of chunk
+//        const ap_uint<8> *source = chunk + byteIndex;
+//
+//        appendUncompressedByte(source, lsB, msB, destination.offset);
+//
+//        // increment writehead
+//        destination.increment(8);
+//    }
 }
 
-void readNextCompressedByte(inputChunkPointer &readHead, const uint8_t *input, uint8_t *outPutChunk) {
+uint8_t readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input) {
 
-    uint8_t lsB, msB;
+    uint16_t input_readable = input;
 
-    lsB = *(input + readHead.byteIndex);
-    msB = *(input + readHead.byteIndex + 1);
-
-    uint8_t offset = readHead.offset;
+	uint8_t start = 15 - readHead.offset;
+	uint8_t end = 15 - readHead.offset - 7;
 
     // shift bytes, to align them
-    lsB <<= readHead.offset;
-    msB >>= 8 - readHead.offset;
+    uint8_t output = input(start, end);
 
-    *outPutChunk = lsB | msB;
-
-    readHead.increment(8);
+    return output;
 }
 
-uint8_t extractOpcode(uint8_t lsB, uint8_t msB, inputChunkPointer &readHead) {
-    uint8_t  opcode;
+uint8_t extractOpcode(uint8_t offset, ap_uint<16> input) {
 
-    // opcode is in one byte
-    if(readHead.offset <= 8 - OPCODE_LENGHT) {
-        opcode = lsB >> (8 - OPCODE_LENGHT - readHead.offset);
-    }
-    // opcode is in 2 bytes
-    else {
-        // 000000|11 11100000
+	uint8_t start = 15 - offset;
+	uint8_t end = 15 - offset - 4;
 
-        // clear out leading 1s
-        lsB <<= readHead.offset;
-        lsB >>= readHead.offset;
+    return input(start, end);
+}
 
-        // shift opcode bits to correct position in lsB
-        lsB <<= readHead.offset + OPCODE_LENGHT - 8;
+void readNextCompressedChunk(inputChunkPointer &readHead, const ap_uint<8>* input, struct chunk &outputChunk) {
 
-        // shift opcode bits to correct position in msB
-        msB >>= 8 - (readHead.offset + OPCODE_LENGHT - 8);
-
-        opcode = lsB | msB;
-    }
-
+	ap_uint<8> lsB = *(input + readHead.byteIndex);
+	ap_uint<8> msB = *(input + readHead.byteIndex + 1);
+    outputChunk.opCode = extractOpcode(readHead.offset, (lsB,msB));
     readHead.increment(5);
 
-    return opcode;
-}
-
-void readNextCompressedChunk(inputChunkPointer &readHead, const uint8_t* input, struct chunk &outputChunk) {
-
-	uint8_t lsB = *(input + readHead.byteIndex);
-	uint8_t msB = *(input + readHead.byteIndex + 1);
-    outputChunk.opCode = extractOpcode(lsB, msB, readHead);
-
     for(int byteIndex = 0; byteIndex < CHUNK_SIZE; byteIndex++) {
-        readNextCompressedByte(readHead, input, outputChunk.data + byteIndex);
+        uint8_t byte = readNextCompressedByte(readHead, (input[readHead.lsB()], input[readHead.msB()]));
+        *(outputChunk.data + byteIndex) = byte;
+        readHead.increment(8);
     }
 }

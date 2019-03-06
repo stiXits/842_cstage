@@ -1,6 +1,6 @@
 bool run_IoTests();
 bool test_extractOpcode_noOffset();
-bool test_xtractOpcode_offset();
+bool test_extractOpcode_offset();
 bool test_extractOpcode_overlapping();
 
 bool test_appendUncompressedByte_noOffset_lsB();
@@ -13,4 +13,4 @@ bool test_readNextCompressedByte_offset();
 bool test_readNextCompressedChunk_noOffset();
 bool test_readNextCompressedChunk_offset();
 
-bool test_appendUncompressedChunk_offset();
+bool test_appendCompressedChunk_offset();

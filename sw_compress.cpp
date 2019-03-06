@@ -1,11 +1,13 @@
 #include "sw842.h"
 
+#include "ap_int.h"
+
 #include "io.h"
 
-int sw842_compress(const uint8_t *in, uint8_t *out, uint32_t blockSize)
+int sw842_compress(const ap_uint<8> *in, ap_uint<8> *out, uint32_t blockSize)
 {
     struct outputChunkPointer writeHead{};
-    writeHead.byteIndex = out;
+    writeHead.byteIndex = 0;
     writeHead.offset = 0;
 
     // append chunk as all (D8) data action
@@ -13,7 +15,7 @@ int sw842_compress(const uint8_t *in, uint8_t *out, uint32_t blockSize)
 
     for(int i = 0; i <= blockSize; i += CHUNK_SIZE)
     {
-        appendUncompressedChunk(opCode, in + i, writeHead);
+        appendCompressedChunk(opCode, in + i);
     }
 
     return 0;
