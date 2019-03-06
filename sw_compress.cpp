@@ -15,7 +15,7 @@ int sw842_compress(const ap_uint<8> *in, ap_uint<8> *out, uint32_t blockSize)
 
     for(int i = 0; i <= blockSize; i += CHUNK_SIZE)
     {
-        appendCompressedChunk(opCode, in + i);
+//        appendCompressedChunk(opCode, in + i);
     }
 
     return 0;

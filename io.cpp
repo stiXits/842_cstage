@@ -20,35 +20,21 @@ void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, 
     *destination1 = leftshifted;
 }
 
-ap_uint<69> appendCompressedChunk(const uint8_t opCode, const ap_uint<8> &chunk) {
+outputChunk appendCompressedChunk(const ap_uint<64> chunk, outputChunk writeHead) {
 
-	return (opCode, chunk.data[0], chunk.data[1], chunk.data[2], chunk.data[3], chunk.data[4], chunk.data[5], chunk.data[6], chunk.data[7]);
-//    // shift opcode to the left
-//	ap_uint<8> shiftedOpcode = opCode << (8 - OPCODE_LENGHT);
-//
-//    // write opcode to destination
-//	ap_uint<8> *lsB = destination.byteIndex;
-//	ap_uint<8> *msB = destination.byteIndex + 1;
-//    appendUncompressedByte(&shiftedOpcode, lsB, msB, destination.offset);
-//
-//    // increment writehead
-//    destination.increment(OPCODE_LENGHT);
-//
-//    // Todo: use smaller int type for byteIndex
-//    for (uint8_t byteIndex = 0; byteIndex < CHUNK_SIZE; byteIndex++) {
-//
-//        //acquire addresses of the next 2 bytes
-//        uint8_t *ap_uint<8> = destination.byteIndex;
-//        uint8_t *ap_uint<8> = destination.byteIndex + 1;
-//
-//        // set source to current byte of chunk
-//        const ap_uint<8> *source = chunk + byteIndex;
-//
-//        appendUncompressedByte(source, lsB, msB, destination.offset);
-//
-//        // increment writehead
-//        destination.increment(8);
-//    }
+	// fill high with chunk as far as possible
+	writeHead.high = (	writeHead.high(CHUNK_SIZE_BITS - 1, CHUNK_SIZE_BITS - 1 - writeHead.offset),
+						chunk(CHUNK_SIZE_BITS - 1, writeHead.offset));
+
+	// fill overflowing bits into low
+	writeHead.low =	(chunk(writeHead.offset, 0));
+
+	// shift bits to the start of low
+	writeHead.low <<= 64 - writeHead.offset;
+
+	writeHead.offset += 64;
+
+	return writeHead;
 }
 
 uint8_t readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input) {
