@@ -198,23 +198,114 @@ bool test_appendCompressedChunk_offset() {
     return result.low == low && result.high == high && result.offset == 64 + 5;
 }
 
-bool run_IoTests() {
-    return
-//    		test_extractOpcode_noOffset()
-//           && test_extractOpcode_offset()
-//           && test_extractOpcode_overlapping()
-//
-//           && test_appendUncompressedByte_noOffset_lsB()
-//           && test_appendUncompressedByte_offset()
-//           && test_appendUncompressedByte_offset_msB()
-//
-//           && test_readNextCompressedByte_noOffset()
-//           && test_readNextCompressedByte_offset()
-//
-//           && test_readNextCompressedChunk_noOffset()
-//           && test_readNextCompressedChunk_offset()
+bool test_appendCompressedChunk_onlyLow() {
+    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+    const ap_uint<64> payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 
-//           &&
-		   test_appendCompressedChunk_noOffset()
-           && test_appendCompressedChunk_offset();
+    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    // opcode|      chunk
+    ap_uint<64> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    ap_uint<64> low =  0b0000011100001001000010100000101100001100000011010000111000001111;
+
+    struct outputChunk writeHead;
+    writeHead.offset = 64;
+
+    outputChunk result = appendCompressedChunk(payload, writeHead);
+
+    return result.low == low && result.high == high && result.offset == 64 + 5;
+}
+
+bool test_appendOpcode_noOffset() {
+
+	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+	ap_uint<64> high = 0b1111100000000000000000000000000000000000000000000000000000000000;
+
+    struct outputChunk writeHead;
+    writeHead.offset = 0;
+
+    struct outputChunk result = appendOpcode(opcode, writeHead);
+
+    return result.high == high && result.low == 0 && result.offset == OPCODE_SIZE;
+}
+
+bool test_appendOpcode_offset() {
+
+	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+	ap_uint<64> high = 0b0000000000111110000000000000000000000000000000000000000000000000;
+
+    struct outputChunk writeHead;
+    writeHead.offset = 10;
+
+    struct outputChunk result = appendOpcode(opcode, writeHead);
+
+    return result.high == high && result.low == 0 && result.offset == 10 + OPCODE_SIZE;
+}
+
+bool test_appendOpcode_overlappingOffset() {
+
+	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+	ap_uint<64> high = 0b0000000000000000000000000000000000000000000000000000000000000111;
+	ap_uint<64> low =  0b1100000000000000000000000000000000000000000000000000000000000000;
+
+    struct outputChunk writeHead;
+    writeHead.offset = 61;
+
+    struct outputChunk result = appendOpcode(opcode, writeHead);
+
+    return result.high == high && result.low == low && result.offset == 61 + OPCODE_SIZE;
+}
+
+bool test_appendOpcode_onlyLow() {
+
+	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+	ap_uint<64> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+	ap_uint<64> low =  0b1111100000000000000000000000000000000000000000000000000000000000;
+
+    struct outputChunk writeHead;
+    writeHead.offset = 64;
+
+    struct outputChunk result = appendOpcode(opcode, writeHead);
+
+    return result.high == high && result.low == low && result.offset == 64 + OPCODE_SIZE;
+}
+
+bool test_appendOpcode_offsetLow() {
+
+	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+	ap_uint<64> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+	ap_uint<64> low =  0b0000000000111110000000000000000000000000000000000000000000000000;
+
+    struct outputChunk writeHead;
+    writeHead.offset = 74;
+
+    struct outputChunk result = appendOpcode(opcode, writeHead);
+
+    return result.high == high && result.low == low && result.offset == 74 + OPCODE_SIZE;
+}
+
+bool run_IoTests() {
+    return test_extractOpcode_noOffset()
+           && test_extractOpcode_offset()
+           && test_extractOpcode_overlapping()
+
+           && test_appendUncompressedByte_noOffset_lsB()
+           && test_appendUncompressedByte_offset()
+           && test_appendUncompressedByte_offset_msB()
+
+           && test_readNextCompressedByte_noOffset()
+           && test_readNextCompressedByte_offset()
+
+           && test_readNextCompressedChunk_noOffset()
+           && test_readNextCompressedChunk_offset()
+
+           && test_appendCompressedChunk_noOffset()
+           && test_appendCompressedChunk_offset()
+		   && test_appendCompressedChunk_onlyLow()
+
+		   && test_appendOpcode_noOffset()
+		   && test_appendOpcode_offset()
+		   && test_appendOpcode_overlappingOffset()
+		   && test_appendOpcode_onlyLow()
+		   && test_appendOpcode_offsetLow();
+
 }

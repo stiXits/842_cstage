@@ -87,6 +87,7 @@ struct outputChunk {
 
 // the chunk lies within an aligned data block (no opcodes before data bytes), so a pointer suffices to address it
 outputChunk appendCompressedChunk(const ap_uint<64> chunk, outputChunk writeHead);
+outputChunk appendOpcode(const ap_uint<OPCODE_SIZE> opcode, outputChunk writeHead);
 void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const uint8_t &offset);
 
 uint8_t readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input);

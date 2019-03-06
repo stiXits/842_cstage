@@ -1,5 +1,6 @@
 #include "io.h"
 #include "ap_int.h"
+#include "hls_math.h"
 
 #include "settings.h"
 
@@ -21,18 +22,79 @@ void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, 
 }
 
 outputChunk appendCompressedChunk(const ap_uint<64> chunk, outputChunk writeHead) {
+	// how many opcode bits fit into high?
+	int numberOfBitsInHigh = CHUNK_SIZE_BITS - writeHead.offset;
+	if(numberOfBitsInHigh < 0) {
+		numberOfBitsInHigh = 0;
+	}
+	int numberOfBitsInLow = CHUNK_SIZE_BITS - numberOfBitsInHigh;
 
-	// fill high with chunk as far as possible
-	writeHead.high = (	writeHead.high(CHUNK_SIZE_BITS - 1, CHUNK_SIZE_BITS - 1 - writeHead.offset),
-						chunk(CHUNK_SIZE_BITS - 1, writeHead.offset));
+	if(numberOfBitsInHigh > 0) {
+		// fill high with chunk as far as possible
+		writeHead.high = (	writeHead.high(CHUNK_SIZE_BITS - 1, CHUNK_SIZE_BITS - 1 - writeHead.offset),
+							chunk(CHUNK_SIZE_BITS - 1, writeHead.offset));
+	}
+
+	int lowOffset = (writeHead.offset - CHUNK_SIZE_BITS);
+	if(lowOffset < 0) {
+		lowOffset = 0;
+	}
 
 	// fill overflowing bits into low
-	writeHead.low =	(chunk(writeHead.offset, 0));
+	writeHead.low =	chunk(CHUNK_SIZE_BITS - lowOffset - 1, 0);
 
 	// shift bits to the start of low
-	writeHead.low <<= 64 - writeHead.offset;
+	writeHead.low <<= lowOffset;
 
 	writeHead.offset += 64;
+
+	return writeHead;
+}
+
+outputChunk appendOpcode(const ap_uint<OPCODE_SIZE> opcode, outputChunk writeHead) {
+
+	// opcode fits into high
+	if(CHUNK_SIZE_BITS - writeHead.offset >= OPCODE_SIZE) {
+
+		// shift offset bits as far to the right as possible while leaving space for the
+		// opcode bits
+		writeHead.high >>= CHUNK_SIZE_BITS - writeHead.offset - OPCODE_SIZE;
+
+		ap_uint<64> opcode64 = opcode;
+		// add opcode at the right end
+		writeHead.high |= opcode64;
+
+		// shift payload back
+		uint8_t bitsToShift = (CHUNK_SIZE_BITS - writeHead.offset - OPCODE_SIZE);
+		writeHead.high <<= bitsToShift;
+	}
+	// opcode overlaps into low
+	else {
+		// how many opcode bits fit into high?
+		int numberOfBitsInHigh = CHUNK_SIZE_BITS - writeHead.offset;
+		if(numberOfBitsInHigh < 0) {
+			numberOfBitsInHigh = 0;
+		}
+		int numberOfBitsInLow = OPCODE_SIZE - numberOfBitsInHigh;
+
+		if(numberOfBitsInHigh > 0) {
+								// offset bits
+			writeHead.high = (writeHead.high(CHUNK_SIZE_BITS - 1, numberOfBitsInHigh - 1),
+								// opcode bits
+							  opcode(OPCODE_SIZE - 1, numberOfBitsInHigh - 1));
+		}
+
+		// fill remaining opcode bits into low
+		writeHead.low = opcode(numberOfBitsInLow - 1, 0);
+		// shift bits as far left as possible
+		int lowOffset = (writeHead.offset - CHUNK_SIZE_BITS);
+		if(lowOffset < 0) {
+			lowOffset = 0;
+		}
+		writeHead.low <<= (CHUNK_SIZE_BITS - numberOfBitsInLow - lowOffset);
+	}
+
+	writeHead.offset += OPCODE_SIZE;
 
 	return writeHead;
 }
