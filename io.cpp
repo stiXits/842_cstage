@@ -35,16 +35,20 @@ outputChunk appendCompressedChunk(const ap_uint<64> chunk, outputChunk writeHead
 							chunk(CHUNK_SIZE_BITS - 1, writeHead.offset));
 	}
 
-	int lowOffset = (writeHead.offset - CHUNK_SIZE_BITS);
-	if(lowOffset < 0) {
-		lowOffset = 0;
+	if(numberOfBitsInLow > 0) {
+
+		int lowOffset = (writeHead.offset - CHUNK_SIZE_BITS);
+		if(lowOffset < 0) {
+			lowOffset = 0;
+		}
+
+		// fill overflowing bits into low
+		writeHead.low =	chunk(CHUNK_SIZE_BITS - numberOfBitsInHigh - 1, 0);
+
+		// shift bits to the start of low
+		writeHead.low <<= numberOfBitsInHigh;
 	}
 
-	// fill overflowing bits into low
-	writeHead.low =	chunk(CHUNK_SIZE_BITS - lowOffset - 1, 0);
-
-	// shift bits to the start of low
-	writeHead.low <<= lowOffset;
 
 	writeHead.offset += 64;
 
