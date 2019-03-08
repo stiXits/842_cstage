@@ -4,6 +4,8 @@
 
 #include "settings.h"
 
+#define CHUNK_START (CHUNK_SIZE_BITS - 1)
+
 void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const uint8_t &offset){
 
     // copy source chunk
@@ -31,8 +33,15 @@ outputChunk appendCompressedChunk(const ap_uint<64> chunk, outputChunk writeHead
 
 	if(numberOfBitsInHigh > 0) {
 		// fill high with chunk as far as possible
-		writeHead.high = (	writeHead.high(CHUNK_SIZE_BITS - 1, CHUNK_SIZE_BITS - 1 - writeHead.offset),
-							chunk(CHUNK_SIZE_BITS - 1, writeHead.offset));
+		if(writeHead.offset == 0) {
+			writeHead.high = chunk;
+		}
+		else {
+			ap_uint<64> remainder = writeHead.high(CHUNK_START, CHUNK_START - writeHead.offset + 1);
+			ap_uint<64> newBits = chunk(CHUNK_SIZE_BITS - 1, writeHead.offset);
+			writeHead.high = (	writeHead.high(CHUNK_START, CHUNK_START - writeHead.offset + 1),
+								chunk(CHUNK_START, writeHead.offset));
+		}
 	}
 
 	if(numberOfBitsInLow > 0) {
@@ -43,7 +52,7 @@ outputChunk appendCompressedChunk(const ap_uint<64> chunk, outputChunk writeHead
 		}
 
 		// fill overflowing bits into low
-		writeHead.low =	chunk(CHUNK_SIZE_BITS - numberOfBitsInHigh - 1, 0);
+		writeHead.low =	chunk(CHUNK_START - numberOfBitsInHigh, 0);
 
 		// shift bits to the start of low
 		writeHead.low <<= numberOfBitsInHigh;

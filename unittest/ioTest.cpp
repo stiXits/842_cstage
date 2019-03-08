@@ -279,6 +279,23 @@ bool test_appendOpcode_offsetLow() {
     return result.high == high && result.low == low && result.offset == 74 + OPCODE_SIZE;
 }
 
+bool test_appendOpcodeAndChunk() {
+    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+    const ap_uint<CHUNK_SIZE_BITS> payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
+
+    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    // opcode|      chunk
+    ap_uint<CHUNK_SIZE_BITS> high = 0b0000011100001001000010100000101100001100000011010000111000001111;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
+
+    struct outputChunk writeHead;
+
+    writeHead = appendOpcode(0, writeHead);
+    writeHead = appendCompressedChunk(payload, writeHead);
+
+    return writeHead.low == low && writeHead.high == high && writeHead.offset == CHUNK_SIZE_BITS + 5;
+}
+
 bool run_IoTests() {
     return test_extractOpcode_noOffset()
            && test_extractOpcode_offset()
@@ -302,6 +319,7 @@ bool run_IoTests() {
 		   && test_appendOpcode_offset()
 		   && test_appendOpcode_overlappingOffset()
 		   && test_appendOpcode_onlyLow()
-		   && test_appendOpcode_offsetLow();
+		   && test_appendOpcode_offsetLow()
+		   && test_appendOpcodeAndChunk();
 
 }

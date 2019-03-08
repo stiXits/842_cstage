@@ -22,3 +22,4 @@ bool test_appendOpcode_overlappingOffset();
 bool test_appendOpcode_onlyLow();
 bool test_appendOpcode_offsetLow();
 bool test_appendCompressedChunk_onlyLow();
+bool test_appendOpcodeAndChunk();

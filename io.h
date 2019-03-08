@@ -83,6 +83,20 @@ struct outputChunk {
 					offset(0){
 
 	}
+
+	bool readyToExtract() {
+		return offset >= 64;
+	}
+
+	ap_uint<64> extractLow() {
+		ap_uint<64> toTransfer = high;
+
+		high = low;
+		low = 0;
+		offset -= 64;
+
+		return toTransfer;
+	}
 };
 
 // the chunk lies within an aligned data block (no opcodes before data bytes), so a pointer suffices to address it
