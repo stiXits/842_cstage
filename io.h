@@ -9,16 +9,16 @@ struct outputChunkPointer {
     uint32_t byteIndex;
 
     // the offset points to within the first byte, thus 3 bits will be sufficient
-    uint8_t offset;
+    ap_uint<8> offset;
 
     outputChunkPointer& increment()
     {
         byteIndex++;
     }
 
-    outputChunkPointer& increment(uint8_t increment)
+    outputChunkPointer& increment(ap_uint<8> increment)
     {
-        uint8_t accu = offset + increment;
+        ap_uint<8> accu = offset + increment;
         byteIndex += accu / 8;
         offset = accu % 8;
     }
@@ -38,16 +38,16 @@ struct inputChunkPointer {
     uint32_t byteIndex;
 
     // the offset points to within the first byte, thus 3 bits will be sufficient
-    uint8_t offset;
+    ap_uint<8> offset;
 
     outputChunkPointer& increment()
     {
         byteIndex++;
     }
 
-    outputChunkPointer& increment(uint8_t increment)
+    outputChunkPointer& increment(ap_uint<8> increment)
     {
-        uint8_t accu = offset + increment;
+        ap_uint<8> accu = offset + increment;
         byteIndex += accu / 8;
         offset = accu % 8;
     }
@@ -64,15 +64,15 @@ struct inputChunkPointer {
 
 struct chunk {
 	ap_uint<8> data[CHUNK_SIZE];
-    uint8_t opCode;
+    ap_uint<8> opCode;
 };
 
 struct outputChunk {
 	ap_uint<64> high, low;
 
-	uint8_t offset;
+	ap_uint<8> offset;
 
-	outputChunk(ap_uint<64> high, ap_uint<64> low, uint8_t offset) :offset(offset),
+	outputChunk(ap_uint<64> high, ap_uint<64> low, ap_uint<8> offset) :offset(offset),
 																	high(high),
 																	low(low) {
 
@@ -102,12 +102,12 @@ struct outputChunk {
 // the chunk lies within an aligned data block (no opcodes before data bytes), so a pointer suffices to address it
 outputChunk appendCompressedChunk(const ap_uint<64> chunk, outputChunk writeHead);
 outputChunk appendOpcode(const ap_uint<OPCODE_SIZE> opcode, outputChunk writeHead);
-void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const uint8_t &offset);
+void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const ap_uint<8> &offset);
 
-uint8_t readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input);
+ap_uint<8> readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input);
 
 // compressed chunks are preceded by a 5 bit opcode, so they can't be addressed by a byte pointer, the chunkdata will
 // be copied to the chunk data structure
 void readNextCompressedChunk(inputChunkPointer &readHead, const ap_uint<8>* input, struct chunk &outputChunk);
 
-uint8_t extractOpcode(uint8_t offset, ap_uint<16> input);
+ap_uint<8> extractOpcode(ap_uint<8> offset, ap_uint<16> input);

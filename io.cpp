@@ -6,11 +6,11 @@
 
 #define CHUNK_START (CHUNK_SIZE_BITS - 1)
 
-void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const uint8_t &offset){
+void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const ap_uint<8> &offset){
 
     // copy source chunk
-    uint8_t rightshifted = *source;
-    uint8_t leftshifted = *source;
+    ap_uint<8> rightshifted = *source;
+    ap_uint<8> leftshifted = *source;
 
     // shift content behind existing content in destination0
     rightshifted = rightshifted >> offset;
@@ -78,7 +78,7 @@ outputChunk appendOpcode(const ap_uint<OPCODE_SIZE> opcode, outputChunk writeHea
 		writeHead.high |= opcode64;
 
 		// shift payload back
-		uint8_t bitsToShift = (CHUNK_SIZE_BITS - writeHead.offset - OPCODE_SIZE);
+		ap_uint<8> bitsToShift = (CHUNK_SIZE_BITS - writeHead.offset - OPCODE_SIZE);
 		writeHead.high <<= bitsToShift;
 	}
 	// opcode overlaps into low
@@ -112,23 +112,23 @@ outputChunk appendOpcode(const ap_uint<OPCODE_SIZE> opcode, outputChunk writeHea
 	return writeHead;
 }
 
-uint8_t readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input) {
+ap_uint<8> readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input) {
 
     uint16_t input_readable = input;
 
-	uint8_t start = 15 - readHead.offset;
-	uint8_t end = 15 - readHead.offset - 7;
+	ap_uint<8> start = 15 - readHead.offset;
+	ap_uint<8> end = 15 - readHead.offset - 7;
 
     // shift bytes, to align them
-    uint8_t output = input(start, end);
+    ap_uint<8> output = input(start, end);
 
     return output;
 }
 
-uint8_t extractOpcode(uint8_t offset, ap_uint<16> input) {
+ap_uint<8> extractOpcode(ap_uint<8> offset, ap_uint<16> input) {
 
-	uint8_t start = 15 - offset;
-	uint8_t end = 15 - offset - 4;
+	ap_uint<8> start = 15 - offset;
+	ap_uint<8> end = 15 - offset - 4;
 
     return input(start, end);
 }
@@ -141,7 +141,7 @@ void readNextCompressedChunk(inputChunkPointer &readHead, const ap_uint<8>* inpu
     readHead.increment(5);
 
     for(int byteIndex = 0; byteIndex < CHUNK_SIZE; byteIndex++) {
-        uint8_t byte = readNextCompressedByte(readHead, (input[readHead.lsB()], input[readHead.msB()]));
+        ap_uint<8> byte = readNextCompressedByte(readHead, (input[readHead.lsB()], input[readHead.msB()]));
         *(outputChunk.data + byteIndex) = byte;
         readHead.increment(8);
     }

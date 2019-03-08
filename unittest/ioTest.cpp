@@ -13,7 +13,7 @@ bool test_extractOpcode_noOffset() {
     readHead.byteIndex = 0;
     readHead.offset = 0;
 
-    uint8_t opcode = extractOpcode(0, payload);
+    ap_uint<8> opcode = extractOpcode(0, payload);
 
     // binary: 00011111
     return opcode == 31;
@@ -23,7 +23,7 @@ bool test_extractOpcode_offset() {
     // binary: 00111110 00000000
     ap_uint<16> payload = 15872;
 
-    uint8_t opcode = extractOpcode(2, payload);
+    ap_uint<8> opcode = extractOpcode(2, payload);
 
     // binary: 00011111
     return opcode == 31;
@@ -33,8 +33,8 @@ bool test_extractOpcode_overlapping() {
     // binary: 00000011 11100000
     ap_uint<16> payload = 992;
 
-    uint8_t opcode0 = extractOpcode(6, payload);
-    uint8_t opcode1 = extractOpcode(11, payload);
+    ap_uint<8> opcode0 = extractOpcode(6, payload);
+    ap_uint<8> opcode1 = extractOpcode(11, payload);
 
     // binary: 00011111
     return opcode0 == 31 && opcode1 == 0;
@@ -94,13 +94,13 @@ bool test_readNextCompressedByte_noOffset() {
     readHead.byteIndex = 0;
     readHead.offset = 0;
 
-    uint8_t output0 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
+    ap_uint<8> output0 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
     readHead.increment(8);
-    uint8_t output1 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
+    ap_uint<8> output1 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
     readHead.increment(8);
-    uint8_t output2 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
+    ap_uint<8> output2 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
     readHead.increment(8);
-    uint8_t output3 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
+    ap_uint<8> output3 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
     readHead.increment(8);
 
     return output0 == 192 && output1 == 224 && output2 == 255;
@@ -116,11 +116,11 @@ bool test_readNextCompressedByte_offset() {
     readHead.byteIndex = 0;
     readHead.offset = 4;
 
-    uint8_t output0 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
+    ap_uint<8> output0 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
     readHead.increment();
-    uint8_t output1 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
+    ap_uint<8> output1 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
     readHead.increment();
-    uint8_t output2 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
+    ap_uint<8> output2 = readNextCompressedByte(readHead, (payload[readHead.lsB()], payload[readHead.msB()]));
     readHead.increment();
 
     return output0 == 62 && output1 == 15 && output2 == 252;
