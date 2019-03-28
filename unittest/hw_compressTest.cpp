@@ -1,11 +1,7 @@
 #include <cstdlib>
 #include <vector>
 
-//#include <sds_lib.h>
-
 #include "../hw842.h"
-
-#include "tools.h"
 #include "../settings.h"
 
 bool test_hw842_compress_smallInput() {

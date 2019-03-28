@@ -174,7 +174,8 @@ bool test_appendCompressedChunk_noOffset() {
 
     struct outputChunk writeHead;
 
-    outputChunk result = appendCompressedChunk(payload, writeHead);
+    outputChunk result;
+    appendCompressedChunk(&result, payload, writeHead);
 
     return result.low == low && result.high == high && result.offset == CHUNK_SIZE_BITS;
 }
@@ -191,7 +192,8 @@ bool test_appendCompressedChunk_offset() {
     struct outputChunk writeHead;
     writeHead.offset = 5;
 
-    outputChunk result = appendCompressedChunk(payload, writeHead);
+    outputChunk result;
+    appendCompressedChunk(&result, payload, writeHead);
 
     return result.low == low && result.high == high && result.offset == CHUNK_SIZE_BITS + 5;
 }
@@ -206,7 +208,8 @@ bool test_appendCompressedChunk_onlyLow() {
     struct outputChunk writeHead;
     writeHead.offset = CHUNK_SIZE_BITS;
 
-    outputChunk result = appendCompressedChunk(payload, writeHead);
+    outputChunk result;
+    appendCompressedChunk(&result, payload, writeHead);
 
     return result.low == low && result.high == high && result.offset == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS;
 }
@@ -219,7 +222,8 @@ bool test_appendOpcode_noOffset() {
     struct outputChunk writeHead;
     writeHead.offset = 0;
 
-    struct outputChunk result = appendOpcode(opcode, writeHead);
+    struct outputChunk result;
+    appendOpcode(&result, opcode, writeHead);
 
     return result.high == high && result.low == 0 && result.offset == OPCODE_SIZE;
 }
@@ -232,7 +236,8 @@ bool test_appendOpcode_offset() {
     struct outputChunk writeHead;
     writeHead.offset = 10;
 
-    struct outputChunk result = appendOpcode(opcode, writeHead);
+    struct outputChunk result;
+    appendOpcode(&result, opcode, writeHead);
 
     return result.high == high && result.low == 0 && result.offset == 10 + OPCODE_SIZE;
 }
@@ -246,7 +251,8 @@ bool test_appendOpcode_overlappingOffset() {
     struct outputChunk writeHead;
     writeHead.offset = 61;
 
-    struct outputChunk result = appendOpcode(opcode, writeHead);
+    struct outputChunk result;
+    appendOpcode(&result, opcode, writeHead);
 
     return result.high == high && result.low == low && result.offset == 61 + OPCODE_SIZE;
 }
@@ -260,7 +266,8 @@ bool test_appendOpcode_onlyLow() {
     struct outputChunk writeHead;
     writeHead.offset = CHUNK_SIZE_BITS;
 
-    struct outputChunk result = appendOpcode(opcode, writeHead);
+    struct outputChunk result;
+    appendOpcode(&result, opcode, writeHead);
 
     return result.high == high && result.low == low && result.offset == CHUNK_SIZE_BITS + OPCODE_SIZE;
 }
@@ -274,7 +281,8 @@ bool test_appendOpcode_offsetLow() {
     struct outputChunk writeHead;
     writeHead.offset = 74;
 
-    struct outputChunk result = appendOpcode(opcode, writeHead);
+    struct outputChunk result;
+    appendOpcode(&result, opcode, writeHead);
 
     return result.high == high && result.low == low && result.offset == 74 + OPCODE_SIZE;
 }
@@ -290,8 +298,8 @@ bool test_appendOpcodeAndChunk() {
 
     struct outputChunk writeHead;
 
-    writeHead = appendOpcode(0, writeHead);
-    writeHead = appendCompressedChunk(payload, writeHead);
+    appendOpcode(&writeHead, 0, writeHead);
+    appendCompressedChunk(&writeHead, payload, writeHead);
 
     return writeHead.low == low && writeHead.high == high && writeHead.offset == CHUNK_SIZE_BITS + 5;
 }
