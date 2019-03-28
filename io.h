@@ -89,10 +89,10 @@ struct outputChunk {
 	}
 
 	ap_uint<64> extractLow() {
-		ap_uint<64> toTransfer = low;
+		ap_uint<64> toTransfer = high;
 
-		low = high;
-		high = 0;
+		high = low;
+		low = 0;
 		offset -= 64;
 
 		return toTransfer;
@@ -111,3 +111,4 @@ ap_uint<8> readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16>
 void readNextCompressedChunk(inputChunkPointer &readHead, const ap_uint<8>* input, struct chunk &outputChunk);
 
 ap_uint<8> extractOpcode(ap_uint<8> offset, ap_uint<16> input);
+outputChunk extractAlignedData(outputChunk chunk, ap_uint<8> *out, uint32_t outputIterator);

@@ -1,14 +1,18 @@
 #include <cstdlib>
 #include <vector>
-#include "../sw842.h"
+
+//#include <sds_lib.h>
+
+#include "../hw842.h"
 
 #include "tools.h"
-
 #include "../settings.h"
 
-bool test_sw842_compress_smallInput() {
+bool test_hw842_compress_smallInput() {
 
-	std::vector<ap_uint<8>> inputBuffer(BLOCK_SIZE);
+//	void *inputMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	auto inputBuffer = *(new(inputMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
+	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
     //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
     inputBuffer[0] = 225;
@@ -20,7 +24,10 @@ bool test_sw842_compress_smallInput() {
     inputBuffer[6] = 193;
     inputBuffer[7] = 226;
 
-    std::vector<ap_uint<8>> expectedResult(BLOCK_SIZE);
+
+//	void *expectedResultMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	auto expectedResult = *(new(expectedResultMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
+    auto expectedResult = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
     //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000
     // opcode|      chunk
@@ -35,16 +42,30 @@ bool test_sw842_compress_smallInput() {
     expectedResult[8] = 16;
     expectedResult[9] = 0;
 
-    std::vector<ap_uint<8>> outputBuffer(BLOCK_SIZE);
+//	void *outputBufferMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	auto outputBuffer = *(new(outputBufferMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
+    auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
-    sw842_compress(&inputBuffer[0], &outputBuffer[0], BLOCK_SIZE);
+    for(int i = 0; i < 64; i++) {
+    	outputBuffer[i] = 0;
+    }
 
-    bool result = std::equal(outputBuffer.begin(), outputBuffer.begin() + BLOCK_SIZE, expectedResult.begin());
+    hw842_compress(inputBuffer, outputBuffer, BLOCK_SIZE);
+
+    bool result = true;
+    for(int i = 0; i < 64; i++) {
+//    	if(outputBuffer[i] != expectedResult[i]) {
+    		std::cout<<"array segments differ: output: "<<outputBuffer[i]<<" expected: "<<expectedResult[i]<<std::endl;
+//    		result = false;
+//    	}
+    }
+//    bool result = true;
+//    bool result = std::equal(outputBuffer.begin(), outputBuffer.begin() + BLOCK_SIZE, expectedResult.begin());
 
     return result;
 }
 
-bool test_sw842_decompress_smallInput() {
+bool test_hw842_decompress_smallInput() {
 
 	std::vector<ap_uint<8>> inputBuffer(BLOCK_SIZE);
     //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000
@@ -73,14 +94,14 @@ bool test_sw842_decompress_smallInput() {
 
     std::vector<ap_uint<8>> outputBuffer(BLOCK_SIZE);
 
-    sw842_decompress(&inputBuffer[0], &outputBuffer[0], BLOCK_SIZE);
+    hw842_decompress(&inputBuffer[0], &outputBuffer[0], BLOCK_SIZE);
 
     bool result = std::equal(outputBuffer.begin(), outputBuffer.begin() + BLOCK_SIZE, expectedResult.begin());
 
     return result;
 }
 
-bool run_sw_compressTests() {
-    return      test_sw842_compress_smallInput()
-            &&  test_sw842_decompress_smallInput();
+bool run_hw_compressTests() {
+    return      test_hw842_compress_smallInput()
+            &&  test_hw842_decompress_smallInput();
 }

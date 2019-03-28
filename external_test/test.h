@@ -5,4 +5,4 @@
 
 long long currentTimestamp();
 int nextMultipleOfBlockSize(unsigned int input);
-int runTest( int argc, const char* argv[]);
+//int runExternalTest();
