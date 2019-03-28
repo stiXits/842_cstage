@@ -89,10 +89,10 @@ struct outputChunk {
 	}
 
 	ap_uint<64> extractLow() {
-		ap_uint<64> toTransfer = high;
+		ap_uint<64> toTransfer = low;
 
-		high = low;
-		low = 0;
+		low = high;
+		high = 0;
 		offset -= 64;
 
 		return toTransfer;
