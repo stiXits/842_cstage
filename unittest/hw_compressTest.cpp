@@ -4,6 +4,8 @@
 #include "../hw842.h"
 #include "../settings.h"
 
+//#include "sds_lib.h"
+
 bool test_hw842_compress_smallInput() {
 
 //	void *inputMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
