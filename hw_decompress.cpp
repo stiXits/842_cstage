@@ -1,6 +1,6 @@
-#include "hw842.h"
 //#include "io.h"
 #include "settings.h"
+#include "ap_int.h"
 
 //#pragma SDS data mem_attribute(in:PHYSICAL_CONTIGUOUS,in:PHYSICAL_CONTIGUOUS)
 int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], uint32_t blockSize)

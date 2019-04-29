@@ -4,11 +4,9 @@
 #include "../hw842.h"
 #include "../settings.h"
 
-//#include "sds_lib.h"
-
 bool test_hw842_compress_smallInput() {
 
-//	void *inputMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *inputMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto inputBuffer = *(new(inputMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
@@ -23,7 +21,7 @@ bool test_hw842_compress_smallInput() {
     inputBuffer[7] = 226;
 
 
-//	void *expectedResultMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *expectedResultMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto expectedResult = *(new(expectedResultMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
     auto expectedResult = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
@@ -40,7 +38,7 @@ bool test_hw842_compress_smallInput() {
     expectedResult[8] = 16;
     expectedResult[9] = 0;
 
-//	void *outputBufferMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *outputBufferMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto outputBuffer = *(new(outputBufferMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
     auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 

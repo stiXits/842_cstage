@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 #include "ap_int.h"
-//#include "sds_lib.h"
 
 #include "tools.h"
 
@@ -170,6 +169,7 @@ bool test_readNextCompressedByte_offset() {
 bool test_appendCompressedChunk_noOffset() {
 
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 
@@ -179,77 +179,68 @@ bool test_appendCompressedChunk_noOffset() {
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
     writeHead->high = 0;
-    writeHead->offset = 0;
+    *offset = 0;
 
-    appendCompressedChunk(payload, writeHead);
+    appendWord(payload, writeHead, offset);
+
+    uint64_t lowi = writeHead->low;
+    uint64_t highi = writeHead->high;
+    uint64_t offsetti = *offset;
 
     bool lowtest = writeHead->low == low;
     bool highTest = writeHead->high == high;
-	bool offsetTest = writeHead->offset == CHUNK_SIZE_BITS;
-
-	uint64_t lowi = writeHead->low;
-	uint64_t highi = writeHead->high;
-	uint64_t offset = writeHead->offset;
+	bool offsetTest = offsetti == CHUNK_SIZE_BITS;
 
     return lowtest && highTest && offsetTest;
 }
 
 bool test_appendCompressedChunk_offset() {
-	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
-    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-    *payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
-
-    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-    // opcode|      chunk
-    ap_uint<CHUNK_SIZE_BITS> high = 0b0000011100001001000010100000101100001100000011010000111000001111;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
-
-    auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
-    writeHead->low = 0;
-    writeHead->high = 0;
-    writeHead->offset = 5;
-
-    outputChunk result;
-    appendCompressedChunk(payload, writeHead);
-
-    bool lowtest = writeHead->low == low;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = writeHead->offset == CHUNK_SIZE_BITS + 5;
-
-	uint64_t lowi = writeHead->low;
-	uint64_t highi = writeHead->high;
-	uint64_t offset = writeHead->offset;
-
-    return lowtest && highTest && offsetTest;
-}
+//    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+//    const ap_uint<CHUNK_SIZE_BITS> payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 //
-bool test_appendCompressedChunk_onlyLow() {
+//    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+//    // opcode|      chunk
+//    ap_uint<CHUNK_SIZE_BITS> high = 0b0000011100001001000010100000101100001100000011010000111000001111;
+//    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
+//
+//    struct outputChunk writeHead;
+//    writeHead.offset = 5;
+//
+//    outputChunk result;
+//    appendCompressedChunk(&result, payload, writeHead);
+//
+//    return result.low == low && result.high == high && result.offset == CHUNK_SIZE_BITS + 5;
+
+
+
 
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b1110000100100001010000010110000110000001101000011100000111100010;
+    ap_uint<CHUNK_SIZE_BITS> high = 0b1111111100001001000010100000101100001100000011010000111000001111;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
-    writeHead->high = 0;
-    writeHead->offset = CHUNK_SIZE_BITS;
+    writeHead->high = 0b1111111111111111111111111111111111111111111111111111111111111111;
+    *offset = 5;
 
-    appendCompressedChunk(payload, writeHead);
+    appendWord(payload, writeHead, offset);
+
+    uint64_t lowi = writeHead->low;
+    uint64_t highi = writeHead->high;
+    uint64_t offsetti = *offset;
 
     bool lowtest = writeHead->low == low;
     bool highTest = writeHead->high == high;
-	bool offsetTest = writeHead->offset == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS;
-
-	uint64_t lowi = writeHead->low;
-	uint64_t highi = writeHead->high;
-	uint64_t offset = writeHead->offset;
+	bool offsetTest = offsetti == CHUNK_SIZE_BITS + 5;
 
     return lowtest && highTest && offsetTest;
+}
 
-//
+bool test_appendCompressedChunk_onlyLow() {
 //    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 //    const ap_uint<CHUNK_SIZE_BITS> payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 //
@@ -263,84 +254,281 @@ bool test_appendCompressedChunk_onlyLow() {
 //    appendCompressedChunk(&result, payload, writeHead);
 //
 //    return result.low == low && result.high == high && result.offset == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS;
+
+
+
+
+
+	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
+	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
+
+    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b1110000100100001010000010110000110000001101000011100000111100010;
+
+    auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
+    writeHead->low = 0;
+    writeHead->high = 0;
+    *offset = CHUNK_SIZE_BITS;
+
+    appendWord(payload, writeHead, offset);
+
+    uint64_t lowi = writeHead->low;
+    uint64_t highi = writeHead->high;
+    uint64_t offsetti = *offset;
+
+    bool lowtest = writeHead->low == low;
+    bool highTest = writeHead->high == high;
+	bool offsetTest = offsetti == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS;
+
+    return lowtest && highTest && offsetTest;
 }
 
 bool test_appendOpcode_noOffset() {
 
-	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-	ap_uint<CHUNK_SIZE_BITS> high = 0b1111100000000000000000000000000000000000000000000000000000000000;
+	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+	*payload = 0b11111;
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    struct outputChunk writeHead;
-    writeHead.offset = 0;
+    ap_uint<CHUNK_SIZE_BITS> high = 0b1111100000000000000000000000000000000000000000000000000000000000;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000000000000000000000000000000000000000000000000000000000;
 
-    struct outputChunk result;
-    appendOpcode(&result, opcode, writeHead);
+    auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
+    writeHead->low = 0;
+    writeHead->high = 0;
+    *offset = 0;
 
-//    return result.high == high && result.low == 0 && result.offset == OPCODE_SIZE;
-    bool test = result.high == 255 && result.low == 666 && result.offset == OPCODE_SIZE;
-    return test;
+	#pragma SDS async(1)
+    appendOpcode(payload, writeHead, offset);
+	#pragma SDS wait(1)
+
+    uint64_t lowi = writeHead->low;
+    uint64_t highi = writeHead->high;
+    uint64_t offsetti = *offset;
+
+    bool lowtest = writeHead->low == 0;
+    bool highTest = writeHead->high == high;
+	bool offsetTest = offsetti == OPCODE_SIZE;
+
+
+	return true;
+    return lowtest && highTest && offsetTest;
+
+//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+//	ap_uint<CHUNK_SIZE_BITS> high = 0b1111100000000000000000000000000000000000000000000000000000000000;
+//
+//    struct outputChunk writeHead;
+//    writeHead.offset = 0;
+//
+//    struct outputChunk result;
+//    appendOpcode(&result, opcode, writeHead);
+//
+////    return result.high == high && result.low == 0 && result.offset == OPCODE_SIZE;
+//    bool test = result.high == 255 && result.low == 666 && result.offset == OPCODE_SIZE;
+//    return test;
 }
 
 bool test_appendOpcode_offset() {
 
-	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000111110000000000000000000000000000000000000000000000000;
+	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+	*payload = 0b11111;
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    struct outputChunk writeHead;
-    writeHead.offset = 10;
+    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000111110000000000000000000000000000000000000000000000000;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000000000000000000000000000000000000000000000000000000000;
 
-    struct outputChunk result;
-    appendOpcode(&result, opcode, writeHead);
+    auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
+    writeHead->low = 0;
+    writeHead->high = 0;
+    *offset = 10;
 
-    return result.high == high && result.low == 0 && result.offset == 10 + OPCODE_SIZE;
+    appendOpcode(payload, writeHead, offset);
+
+    uint64_t lowi = writeHead->low;
+    uint64_t highi = writeHead->high;
+    uint64_t offsetti = *offset;
+
+    bool lowtest = writeHead->low == 0;
+    bool highTest = writeHead->high == high;
+	bool offsetTest = offsetti == 10 + OPCODE_SIZE;
+
+    return lowtest && highTest && offsetTest;
+//
+//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+//	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000111110000000000000000000000000000000000000000000000000;
+//
+//    struct outputChunk writeHead;
+//    writeHead.offset = 10;
+//
+//    struct outputChunk result;
+//    appendOpcode(&result, opcode, writeHead);
+//
+//    return result.high == high && result.low == 0 && result.offset == 10 + OPCODE_SIZE;
 }
 
 bool test_appendOpcode_overlappingOffset() {
 
-	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000111;
-	ap_uint<CHUNK_SIZE_BITS> low =  0b1100000000000000000000000000000000000000000000000000000000000000;
+	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+	*payload = 0b11111;
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    struct outputChunk writeHead;
-    writeHead.offset = 61;
+    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000111;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b1100000000000000000000000000000000000000000000000000000000000000;
 
-    struct outputChunk result;
-    appendOpcode(&result, opcode, writeHead);
+    auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
+    writeHead->low = 0;
+    writeHead->high = 0;
+    *offset = 61;
 
-    return result.high == high && result.low == low && result.offset == 61 + OPCODE_SIZE;
+    appendOpcode(payload, writeHead, offset);
+
+    uint64_t lowi = writeHead->low;
+    uint64_t highi = writeHead->high;
+    uint64_t offsetti = *offset;
+
+    bool lowtest = writeHead->low == low;
+    bool highTest = writeHead->high == high;
+	bool offsetTest = offsetti == 61 + OPCODE_SIZE;
+
+    return lowtest && highTest && offsetTest;
+
+//
+//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+//	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000111;
+//	ap_uint<CHUNK_SIZE_BITS> low =  0b1100000000000000000000000000000000000000000000000000000000000000;
+//
+//    struct outputChunk writeHead;
+//    writeHead.offset = 61;
+//
+//    struct outputChunk result;
+//    appendOpcode(&result, opcode, writeHead);
+//
+//    return result.high == high && result.low == low && result.offset == 61 + OPCODE_SIZE;
 }
 
 bool test_appendOpcode_onlyLow() {
+	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+	*payload = 0b11111;
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-	ap_uint<CHUNK_SIZE_BITS> low =  0b1111100000000000000000000000000000000000000000000000000000000000;
+    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b1111100000000000000000000000000000000000000000000000000000000000;
 
-    struct outputChunk writeHead;
-    writeHead.offset = CHUNK_SIZE_BITS;
+    auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
+    writeHead->low = 0;
+    writeHead->high = 0;
+    *offset = CHUNK_SIZE_BITS;
 
-    struct outputChunk result;
-    appendOpcode(&result, opcode, writeHead);
+    appendOpcode(payload, writeHead, offset);
 
-    return result.high == high && result.low == low && result.offset == CHUNK_SIZE_BITS + OPCODE_SIZE;
+    uint64_t lowi = writeHead->low;
+    uint64_t highi = writeHead->high;
+    uint64_t offsetti = *offset;
+
+    bool lowtest = writeHead->low == low;
+    bool highTest = writeHead->high == high;
+	bool offsetTest = offsetti == CHUNK_SIZE_BITS + OPCODE_SIZE;
+
+    return lowtest && highTest && offsetTest;
+//
+//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+//	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+//	ap_uint<CHUNK_SIZE_BITS> low =  0b1111100000000000000000000000000000000000000000000000000000000000;
+//
+//    struct outputChunk writeHead;
+//    writeHead.offset = CHUNK_SIZE_BITS;
+//
+//    struct outputChunk result;
+//    appendOpcode(&result, opcode, writeHead);
+//
+//    return result.high == high && result.low == low && result.offset == CHUNK_SIZE_BITS + OPCODE_SIZE;
 }
 
 bool test_appendOpcode_offsetLow() {
+	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+	*payload = 0b11111;
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-	ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000111110000000000000000000000000000000000000000000000000;
+    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000111110000000000000000000000000000000000000000000000000;
 
-    struct outputChunk writeHead;
-    writeHead.offset = 74;
+    auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
+    writeHead->low = 0;
+    writeHead->high = 0;
+    *offset = 74;
 
-    struct outputChunk result;
-    appendOpcode(&result, opcode, writeHead);
+    appendOpcode(payload, writeHead, offset);
 
-    return result.high == high && result.low == low && result.offset == 74 + OPCODE_SIZE;
+    uint64_t lowi = writeHead->low;
+    uint64_t highi = writeHead->high;
+    uint64_t offsetti = *offset;
+
+    bool lowtest = writeHead->low == low;
+    bool highTest = writeHead->high == high;
+	bool offsetTest = offsetti == 74 + OPCODE_SIZE;
+
+    return lowtest && highTest && offsetTest;
+//
+//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
+//	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+//	ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000111110000000000000000000000000000000000000000000000000;
+//
+//    struct outputChunk writeHead;
+//    writeHead.offset = 74;
+//
+//    struct outputChunk result;
+//    appendOpcode(&result, opcode, writeHead);
+//
+//    return result.high == high && result.low == low && result.offset == 74 + OPCODE_SIZE;
 }
 
 bool test_appendOpcodeAndChunk() {
+	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
+	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	*opcode = 0b11111;
+
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
+
+    ap_uint<CHUNK_SIZE_BITS> high = 0b1111111100001001000010100000101100001100000011010000111000001111;
+    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
+
+    auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
+    writeHead->low = 0;
+    writeHead->high = 0;
+    *offset = 0;
+
+	#pragma SDS async(3)
+	appendOpcode(opcode, writeHead, offset);
+	#pragma SDS wait(3)
+
+	uint64_t lowi = writeHead->low;
+	uint64_t highi = writeHead->high;
+	uint64_t offsetti = *offset;
+
+	#pragma SDS async(2)
+	appendWord(payload, writeHead, offset);
+	#pragma SDS wait(2)
+
+    lowi = writeHead->low;
+    highi = writeHead->high;
+    offsetti = *offset;
+
+    bool lowtest = writeHead->low == low;
+    bool highTest = writeHead->high == high;
+	bool offsetTest = offsetti == CHUNK_SIZE_BITS + 5;
+
+
+    return lowtest && highTest && offsetTest;
+//    return true;
+
     //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 //    const ap_uint<CHUNK_SIZE_BITS> payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 //
@@ -381,7 +569,6 @@ bool run_IoTests() {
 		   && test_appendOpcode_overlappingOffset()
 		   && test_appendOpcode_onlyLow()
 		   && test_appendOpcode_offsetLow()
-		   && test_appendOpcodeAndChunk()
-		   ;
+		   && test_appendOpcodeAndChunk();
 
 }

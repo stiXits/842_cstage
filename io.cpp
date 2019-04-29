@@ -23,61 +23,120 @@ void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, 
     *destination1 = leftshifted;
 }
 
-void appendCompressedChunk(ap_uint<64> *chunkPointer, outputChunk *writeHead) {
+void appendWord(ap_uint<64> *chunkPointer, outputChunk *writeHead, uint8_t *offset) {
 	ap_uint<64> chunk = *chunkPointer;
-	uint8_t offset = writeHead->offset;
+//	uint8_t offset = writeHead->offset;
 
 	// no offset
-	if(writeHead->offset == 0) {
+	if(*offset == 0) {
 		writeHead->high = chunk;
-		writeHead->offset += 64;
 	}
 	// offset < 64
-	else if(writeHead->offset < 64) {
+	else if(*offset < 64) {
 
-		// set high
-		ap_uint<64> remainder = writeHead->high(CHUNK_START, CHUNK_START - writeHead->offset + 1);
-		ap_uint<64> newBits = chunk(CHUNK_START, writeHead->offset);
-		writeHead->high = (	writeHead->high(CHUNK_START, CHUNK_START - writeHead->offset + 1),
-							chunk(CHUNK_START, writeHead->offset));
+		uint8_t toShift = CHUNK_SIZE_BITS - *offset;
+//		// set high
+		ap_uint<64> remainder = writeHead->high(CHUNK_START, CHUNK_START - *offset + 1);
+		remainder <<= toShift;
+
+		ap_uint<64> newBits = chunk(CHUNK_START, *offset);
+//
+		ap_uint<64> result = remainder;
+//		result <<= toShift;
+//
+		result |= newBits;
+		writeHead->high = result;
 
 		// set low
-		int numberOfBitsInHigh = CHUNK_SIZE_BITS - writeHead->offset;
+		int numberOfBitsInHigh = CHUNK_SIZE_BITS - *offset;
 
 		// fill overflowing bits into low
 		ap_uint<64> lowWord = chunk(CHUNK_START - numberOfBitsInHigh, 0);
 		lowWord <<= numberOfBitsInHigh;
 		writeHead->low = lowWord;
-		writeHead->offset += 64;
 	}
-	// offset = 64
-	else if(writeHead->offset == 64) {
+
+	else if(*offset == 64) {
 		writeHead->low = chunk;
-		writeHead->offset += 64;
 	}
+
+	*offset += 64;
+	return;
 }
 
-void appendOpcode(outputChunk *returnValue, const ap_uint<OPCODE_SIZE> opcode, outputChunk writeHead) {
+
+////
+//////	writeHead->offset = 5;
+////
+//	// how many opcode bits fit into high?
+//	int numberOfBitsInHigh = CHUNK_SIZE_BITS - writeHead->offset;
+//	if(numberOfBitsInHigh < 0) {
+//		numberOfBitsInHigh = 0;
+//	}
+//	int numberOfBitsInLow = CHUNK_SIZE_BITS - numberOfBitsInHigh;
+////
+//	if(numberOfBitsInHigh > 0) {
+////		// fill high with chunk as far as possible
+//		if(writeHead->offset == 0) {
+//			writeHead->high = chunk;
+//			writeHead->offset += 64;
+//		}
+////		else {
+////			ap_uint<64> remainder = writeHead->high(CHUNK_START, CHUNK_START - writeHead->offset + 1);
+////			ap_uint<64> newBits = chunk(CHUNK_SIZE_BITS - 1, writeHead->offset);
+////			writeHead->high = (	writeHead->high(CHUNK_START, CHUNK_START - writeHead->offset + 1),
+////								chunk(CHUNK_START, writeHead->offset));
+////		}
+//	}
+////
+////	if(numberOfBitsInLow > 0) {
+////
+////		int lowOffset = (writeHead->offset - CHUNK_SIZE_BITS);
+////		if(lowOffset < 0) {
+////			lowOffset = 0;
+////		}
+////
+//////		// fill overflowing bits into low
+////		ap_uint<64> lowWord = chunk(CHUNK_START - numberOfBitsInHigh, 0);
+////
+////////		// shift bits to the start of low
+////			// this makes problems:
+////////		writeHead->low <<= numberOfBitsInHigh;
+////
+////		// this also is problematic
+////		// *returnValue = writeHead
+////		lowWord <<= numberOfBitsInHigh;
+////		writeHead->low = lowWord;
+////		writeHead->offset += 64;
+////	}
+////
+////	writeHead->offset += 64;
+//
+//	return;
+//}
+
+void appendOpcode(ap_uint<OPCODE_SIZE> *opcodePointer, outputChunk *writeHead, uint8_t *offset) {
+	ap_uint<OPCODE_SIZE> opcode = *opcodePointer;
 
 	// opcode fits into high
-	if(CHUNK_SIZE_BITS - writeHead.offset >= OPCODE_SIZE) {
+	if(CHUNK_SIZE_BITS - *offset >= OPCODE_SIZE) {
 
 		// shift offset bits as far to the right as possible while leaving space for the
 		// opcode bits
-		writeHead.high >>= CHUNK_SIZE_BITS - writeHead.offset - OPCODE_SIZE;
+		writeHead->high >>= CHUNK_SIZE_BITS - *offset - OPCODE_SIZE;
 
 		ap_uint<64> opcode64 = opcode;
 		// add opcode at the right end
-		writeHead.high |= opcode64;
+		writeHead->high |= opcode64;
 
 		// shift payload back
-		ap_uint<8> bitsToShift = (CHUNK_SIZE_BITS - writeHead.offset - OPCODE_SIZE);
-		writeHead.high <<= bitsToShift;
+		ap_uint<8> bitsToShift = (CHUNK_SIZE_BITS - *offset - OPCODE_SIZE);
+		writeHead->high <<= bitsToShift;
 	}
 	// opcode overlaps into low
 	else {
 		// how many opcode bits fit into high?
-		int numberOfBitsInHigh = CHUNK_SIZE_BITS - writeHead.offset;
+		int numberOfBitsInHigh = CHUNK_SIZE_BITS - *offset;
 		if(numberOfBitsInHigh < 0) {
 			numberOfBitsInHigh = 0;
 		}
@@ -85,25 +144,35 @@ void appendOpcode(outputChunk *returnValue, const ap_uint<OPCODE_SIZE> opcode, o
 
 		if(numberOfBitsInHigh > 0) {
 								// offset bits
-			writeHead.high = (writeHead.high(CHUNK_SIZE_BITS - 1, numberOfBitsInHigh - 1),
+			writeHead->high = (writeHead->high(CHUNK_SIZE_BITS - 1, numberOfBitsInHigh - 1),
 								// opcode bits
 							  opcode(OPCODE_SIZE - 1, numberOfBitsInHigh - 1));
 		}
 
 		// fill remaining opcode bits into low
-		writeHead.low = opcode(numberOfBitsInLow - 1, 0);
+		writeHead->low = opcode(numberOfBitsInLow - 1, 0);
 		// shift bits as far left as possible
-		int lowOffset = (writeHead.offset - CHUNK_SIZE_BITS);
+		int lowOffset = (*offset - CHUNK_SIZE_BITS);
 		if(lowOffset < 0) {
 			lowOffset = 0;
 		}
-		writeHead.low <<= (CHUNK_SIZE_BITS - numberOfBitsInLow - lowOffset);
+
+		int bitsToShift = (CHUNK_SIZE_BITS - numberOfBitsInLow - lowOffset);
+		ap_uint<64> lowWord = writeHead->low;
+		lowWord <<= bitsToShift;
+		writeHead->low = lowWord;
 	}
 
-	writeHead.offset += OPCODE_SIZE;
-
-	*returnValue = writeHead;
+	*offset += OPCODE_SIZE;
 }
+
+//uint8_t appendChunk(ap_uint<CHUNK_SIZE_BITS> *opcode, ap_uint<CHUNK_SIZE_BITS> *chunkPointer, outputChunk *writeHead) {
+//	uint8_t offset = appendOpcode(opcode, writeHead);
+//	writeHead->offset = offset;
+//	offset = appendWord(chunkPointer, writeHead);
+//
+//	return offset;
+//}
 
 ap_uint<8> readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input) {
 
