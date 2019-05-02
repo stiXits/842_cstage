@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 #include "ap_int.h"
-
 #include "tools.h"
 
 bool test_extractOpcode_noOffset() {
@@ -128,44 +127,6 @@ bool test_readNextCompressedByte_offset() {
     return output0 == 62 && output1 == 15 && output2 == 252;
 }
 
-//bool test_readNextCompressedChunk_noOffset() {
-//    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000|000
-//    // opcode|      chunk
-//    ap_uint<8> payload[10] = {7, 9, 10, 11 , 12, 13, 14, 15, 16, 0};
-//
-//    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-//    ap_uint<8> expected_result[8] = {225, 33, 65, 97, 129, 161, 193, 226};
-//
-//    inputChunkPointer readHead;
-//    readHead.byteIndex = 0;
-//    readHead.offset = 0;
-//
-//    struct chunk chunk;
-//
-//    readNextCompressedChunk(readHead, payload, chunk);
-//
-//    return assertArraysAreEqual(expected_result, chunk.data, 8);
-//}
-//
-//bool test_readNextCompressedChunk_offset() {
-//    //   0000;0000 0|0001001 0|0001010 0|0001011 0|0001100 0|0001101 0|0001110 0|0001111 0|0010000  0|0010000
-//    // offset|opcode|     chunk
-//    ap_uint<8> payload[10] = {0, 9, 10, 11 , 12, 13, 14, 15, 16, 16};
-//
-//    //               00010010  00010100  00010110  00011000  00011010  00011100  00011110  00100000
-//    ap_uint<8> expected_result[8] = {18, 20, 22, 24, 26, 28, 30, 32};
-//
-//    inputChunkPointer readHead;
-//    readHead.byteIndex = 0;
-//    readHead.offset = 4;
-//
-//    struct chunk chunk;
-//
-//    readNextCompressedChunk(readHead, payload, chunk);
-//
-//    return assertArraysAreEqual(expected_result, chunk.data, 8);
-//}
-
 bool test_appendCompressedChunk_noOffset() {
 
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
@@ -195,25 +156,6 @@ bool test_appendCompressedChunk_noOffset() {
 }
 
 bool test_appendCompressedChunk_offset() {
-//    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-//    const ap_uint<CHUNK_SIZE_BITS> payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
-//
-//    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-//    // opcode|      chunk
-//    ap_uint<CHUNK_SIZE_BITS> high = 0b0000011100001001000010100000101100001100000011010000111000001111;
-//    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
-//
-//    struct outputChunk writeHead;
-//    writeHead.offset = 5;
-//
-//    outputChunk result;
-//    appendCompressedChunk(&result, payload, writeHead);
-//
-//    return result.low == low && result.high == high && result.offset == CHUNK_SIZE_BITS + 5;
-
-
-
-
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
@@ -241,24 +183,6 @@ bool test_appendCompressedChunk_offset() {
 }
 
 bool test_appendCompressedChunk_onlyLow() {
-//    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-//    const ap_uint<CHUNK_SIZE_BITS> payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
-//
-//    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-//    ap_uint<CHUNK_SIZE_BITS> low =  0b1110000100100001010000010110000110000001101000011100000111100010;
-//
-//    struct outputChunk writeHead;
-//    writeHead.offset = CHUNK_SIZE_BITS;
-//
-//    outputChunk result;
-//    appendCompressedChunk(&result, payload, writeHead);
-//
-//    return result.low == low && result.high == high && result.offset == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS;
-
-
-
-
-
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
@@ -312,22 +236,7 @@ bool test_appendOpcode_noOffset() {
     bool highTest = writeHead->high == high;
 	bool offsetTest = offsetti == OPCODE_SIZE;
 
-
-	return true;
     return lowtest && highTest && offsetTest;
-
-//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-//	ap_uint<CHUNK_SIZE_BITS> high = 0b1111100000000000000000000000000000000000000000000000000000000000;
-//
-//    struct outputChunk writeHead;
-//    writeHead.offset = 0;
-//
-//    struct outputChunk result;
-//    appendOpcode(&result, opcode, writeHead);
-//
-////    return result.high == high && result.low == 0 && result.offset == OPCODE_SIZE;
-//    bool test = result.high == 255 && result.low == 666 && result.offset == OPCODE_SIZE;
-//    return test;
 }
 
 bool test_appendOpcode_offset() {
@@ -356,17 +265,6 @@ bool test_appendOpcode_offset() {
 	bool offsetTest = offsetti == 10 + OPCODE_SIZE;
 
     return lowtest && highTest && offsetTest;
-//
-//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-//	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000111110000000000000000000000000000000000000000000000000;
-//
-//    struct outputChunk writeHead;
-//    writeHead.offset = 10;
-//
-//    struct outputChunk result;
-//    appendOpcode(&result, opcode, writeHead);
-//
-//    return result.high == high && result.low == 0 && result.offset == 10 + OPCODE_SIZE;
 }
 
 bool test_appendOpcode_overlappingOffset() {
@@ -395,19 +293,6 @@ bool test_appendOpcode_overlappingOffset() {
 	bool offsetTest = offsetti == 61 + OPCODE_SIZE;
 
     return lowtest && highTest && offsetTest;
-
-//
-//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-//	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000111;
-//	ap_uint<CHUNK_SIZE_BITS> low =  0b1100000000000000000000000000000000000000000000000000000000000000;
-//
-//    struct outputChunk writeHead;
-//    writeHead.offset = 61;
-//
-//    struct outputChunk result;
-//    appendOpcode(&result, opcode, writeHead);
-//
-//    return result.high == high && result.low == low && result.offset == 61 + OPCODE_SIZE;
 }
 
 bool test_appendOpcode_onlyLow() {
@@ -435,18 +320,6 @@ bool test_appendOpcode_onlyLow() {
 	bool offsetTest = offsetti == CHUNK_SIZE_BITS + OPCODE_SIZE;
 
     return lowtest && highTest && offsetTest;
-//
-//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-//	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-//	ap_uint<CHUNK_SIZE_BITS> low =  0b1111100000000000000000000000000000000000000000000000000000000000;
-//
-//    struct outputChunk writeHead;
-//    writeHead.offset = CHUNK_SIZE_BITS;
-//
-//    struct outputChunk result;
-//    appendOpcode(&result, opcode, writeHead);
-//
-//    return result.high == high && result.low == low && result.offset == CHUNK_SIZE_BITS + OPCODE_SIZE;
 }
 
 bool test_appendOpcode_offsetLow() {
@@ -474,18 +347,6 @@ bool test_appendOpcode_offsetLow() {
 	bool offsetTest = offsetti == 74 + OPCODE_SIZE;
 
     return lowtest && highTest && offsetTest;
-//
-//	ap_uint<OPCODE_SIZE> opcode= 0b11111;
-//	ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-//	ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000111110000000000000000000000000000000000000000000000000;
-//
-//    struct outputChunk writeHead;
-//    writeHead.offset = 74;
-//
-//    struct outputChunk result;
-//    appendOpcode(&result, opcode, writeHead);
-//
-//    return result.high == high && result.low == low && result.offset == 74 + OPCODE_SIZE;
 }
 
 bool test_appendOpcodeAndChunk() {
@@ -527,22 +388,132 @@ bool test_appendOpcodeAndChunk() {
 
 
     return lowtest && highTest && offsetTest;
-//    return true;
+}
 
-    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-//    const ap_uint<CHUNK_SIZE_BITS> payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
-//
-//    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+//bool test_readNextCompressedChunk_noOffset() {
+//    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000|000
 //    // opcode|      chunk
-//    ap_uint<CHUNK_SIZE_BITS> high = 0b0000011100001001000010100000101100001100000011010000111000001111;
-//    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
+//    ap_uint<8> payload[10] = {7, 9, 10, 11 , 12, 13, 14, 15, 16, 0};
 //
-//    struct outputChunk writeHead;
+//    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+//    ap_uint<8> expected_result[8] = {225, 33, 65, 97, 129, 161, 193, 226};
 //
-//    appendOpcode(&writeHead, 0, writeHead);
-//    appendCompressedChunk(&writeHead, payload, writeHead);
+//    inputChunkPointer readHead;
+//    readHead.byteIndex = 0;
+//    readHead.offset = 0;
 //
-//    return writeHead.low == low && writeHead.high == high && writeHead.offset == CHUNK_SIZE_BITS + 5;
+//    struct chunk chunk;
+//
+//    readNextCompressedChunk(readHead, payload, chunk);
+//
+//    return assertArraysAreEqual(expected_result, chunk.data, 8);
+//}
+
+//bool test_readNextCompressedChunk_offset() {
+//    //   0000;0000 0|0001001 0|0001010 0|0001011 0|0001100 0|0001101 0|0001110 0|0001111 0|0010000  0|0010000
+//    // offset|opcode|     chunk
+//    ap_uint<8> payload[10] = {0, 9, 10, 11 , 12, 13, 14, 15, 16, 16};
+//
+//    //               00010010  00010100  00010110  00011000  00011010  00011100  00011110  00100000
+//    ap_uint<8> expected_result[8] = {18, 20, 22, 24, 26, 28, 30, 32};
+//
+//    inputChunkPointer readHead;
+//    readHead.byteIndex = 0;
+//    readHead.offset = 4;
+//
+//    struct chunk chunk;
+//
+//    readNextCompressedChunk(readHead, payload, chunk);
+//
+//    return assertArraysAreEqual(expected_result, chunk.data, 8);
+//}
+
+bool test_readCompressedChunk_noOffset() {
+	auto payload = (ap_uint<64>*) malloc(2 * sizeof(ap_uint<64>));
+	auto chunk = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
+	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
+
+	//    11111|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000|000
+	payload[0] = 0b1111111100001001000010100000101100001100000011010000111000001111;
+	payload[1] = 0b0001000000000000000000000000000000000000000000000000000000000000;
+	*opcode = 0;
+	*offset = 0;
+	*chunk = 0;
+
+	ap_uint<64> expectedResult = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	readCompressedChunk(payload, chunk, opcode, offset);
+
+	// debug
+	uint64_t chunki = *chunk;
+	uint8_t offsetti = *offset;
+	uint8_t opcodei = *opcode;
+
+    bool chunkTest = *chunk == expectedResult;
+    bool opcodeTest = *opcode == 0b11111;
+	bool offsetTest = *offset == OPCODE_SIZE;
+
+
+    return chunkTest && opcodeTest && offsetTest;
+
+}
+
+bool test_readCompressedChunk_offset() {
+	auto payload = (ap_uint<64>*) malloc(2 * sizeof(ap_uint<64>));
+	auto chunk = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
+	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
+
+	//    11111|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000|000
+	payload[0] = 0b1111111111111100001001000010100000101100001100000011010000111000;
+	payload[1] = 0b0011110001000000000000000000000000000000000000000000000000000000;
+	*opcode = 0;
+	*offset = 6;
+	*chunk = 0;
+
+	ap_uint<64> expectedResult = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	readCompressedChunk(payload, chunk, opcode, offset);
+
+	// debug
+	uint64_t chunki = *chunk;
+	uint8_t offsetti = *offset;
+	uint8_t opcodei = *opcode;
+
+    bool chunkTest = *chunk == expectedResult;
+    bool opcodeTest = *opcode == 0b11111;
+	bool offsetTest = *offset == 6 + OPCODE_SIZE;
+
+
+    return chunkTest && opcodeTest && offsetTest;
+
+}
+
+bool test_readCompressedChunk_largeOffset() {
+	auto payload = (ap_uint<64>*) malloc(2 * sizeof(ap_uint<64>));
+	auto chunk = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
+	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
+	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
+
+	//    11111|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000|000
+	payload[0] = 0b1111111111111100001001000010100000101100001100000011010000111111;
+	payload[1] = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	*opcode = 0;
+	*offset = 64 - OPCODE_SIZE;
+	*chunk = 0;
+
+	ap_uint<64> expectedResult = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	readCompressedChunk(payload, chunk, opcode, offset);
+
+	// debug
+	uint64_t chunki = *chunk;
+	uint8_t offsetti = *offset;
+	uint8_t opcodei = *opcode;
+
+    bool chunkTest = *chunk == expectedResult;
+    bool opcodeTest = *opcode == 0b11111;
+	bool offsetTest = *offset == 64;
+
+    return chunkTest && opcodeTest && offsetTest;
 }
 
 bool run_IoTests() {
@@ -569,6 +540,9 @@ bool run_IoTests() {
 		   && test_appendOpcode_overlappingOffset()
 		   && test_appendOpcode_onlyLow()
 		   && test_appendOpcode_offsetLow()
-		   && test_appendOpcodeAndChunk();
+		   && test_appendOpcodeAndChunk()
+
+		   && test_readCompressedChunk_noOffset()
+		   && test_readCompressedChunk_offset();
 
 }

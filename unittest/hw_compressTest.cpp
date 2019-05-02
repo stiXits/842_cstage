@@ -4,9 +4,11 @@
 #include "../hw842.h"
 #include "../settings.h"
 
+//#include "sds_lib.h"
+
 bool test_hw842_compress_smallInput() {
 
-//	void *inputMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *inputMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto inputBuffer = *(new(inputMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
@@ -21,7 +23,7 @@ bool test_hw842_compress_smallInput() {
     inputBuffer[7] = 226;
 
 
-//	void *expectedResultMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *expectedResultMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto expectedResult = *(new(expectedResultMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
     auto expectedResult = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
@@ -38,7 +40,7 @@ bool test_hw842_compress_smallInput() {
     expectedResult[8] = 16;
     expectedResult[9] = 0;
 
-//	void *outputBufferMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *outputBufferMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto outputBuffer = *(new(outputBufferMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
     auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
@@ -50,10 +52,10 @@ bool test_hw842_compress_smallInput() {
 
     bool result = true;
     for(int i = 0; i < 64; i++) {
-//    	if(outputBuffer[i] != expectedResult[i]) {
+    	if(outputBuffer[i] != expectedResult[i]) {
     		std::cout<<"array segments differ: output: "<<outputBuffer[i]<<" expected: "<<expectedResult[i]<<std::endl;
-//    		result = false;
-//    	}
+    		result = false;
+    	}
     }
 //    bool result = true;
 //    bool result = std::equal(outputBuffer.begin(), outputBuffer.begin() + BLOCK_SIZE, expectedResult.begin());
@@ -63,9 +65,10 @@ bool test_hw842_compress_smallInput() {
 
 bool test_hw842_decompress_smallInput() {
 
-	std::vector<ap_uint<8>> inputBuffer(BLOCK_SIZE);
+	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
     //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000
     // opcode|      chunk
+	memset(inputBuffer, 0, sizeof(BLOCK_SIZE * sizeof(ap_uint<8>)));
     inputBuffer[0] = 7;
     inputBuffer[1] = 9;
     inputBuffer[2] = 10;
@@ -76,8 +79,9 @@ bool test_hw842_decompress_smallInput() {
     inputBuffer[7] = 15;
     inputBuffer[8] = 16;
 
-    std::vector<ap_uint<8>> expectedResult(BLOCK_SIZE);
+    auto expectedResult = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
     //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+    memset(expectedResult, 0, sizeof(BLOCK_SIZE * sizeof(ap_uint<8>)));
     expectedResult[0] = 225;
     expectedResult[1] = 33;
     expectedResult[2] = 65;
@@ -88,11 +92,18 @@ bool test_hw842_decompress_smallInput() {
     expectedResult[7] = 226;
     expectedResult[8] = 0;
 
-    std::vector<ap_uint<8>> outputBuffer(BLOCK_SIZE);
+    auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+    memset(outputBuffer, 0, sizeof(BLOCK_SIZE * sizeof(ap_uint<8>)));
 
     hw842_decompress(&inputBuffer[0], &outputBuffer[0], BLOCK_SIZE);
 
-    bool result = std::equal(outputBuffer.begin(), outputBuffer.begin() + BLOCK_SIZE, expectedResult.begin());
+    bool result = true;
+    for(int i = 0; i < 64; i++) {
+    	if(outputBuffer[i] != expectedResult[i]) {
+    		std::cout<<"array segment " << i << " differs: output: "<<outputBuffer[i]<<" expected: "<<expectedResult[i]<<std::endl;
+    		result = false;
+    	}
+    }
 
     return result;
 }

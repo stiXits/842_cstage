@@ -23,3 +23,6 @@ bool test_appendOpcode_onlyLow();
 bool test_appendOpcode_offsetLow();
 bool test_appendCompressedChunk_onlyLow();
 bool test_appendOpcodeAndChunk();
+
+bool test_readCompressedChunk_noOffset();
+bool test_readCompressedChunk_offset();

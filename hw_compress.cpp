@@ -1,5 +1,6 @@
 #include "hw842.h"
 
+//#include "sds_lib.h"
 #include "ap_int.h"
 
 #include "io.h"
@@ -13,8 +14,19 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
     struct outputChunk writeHead;
     uint32_t outputIterator = 0;
 
-    for(int i = 0; i <= blockSize; i += CHUNK_SIZE)
+    for(uint8_t i = 0; i <= blockSize; i += CHUNK_SIZE)
     {
+
+    	// debug
+		uint8_t in0 = in[i + 0];
+		uint8_t in1 = in[i + 1];
+		uint8_t in2 = in[i + 2];
+		uint8_t in3 = in[i + 3];
+		uint8_t in4 = in[i + 4];
+		uint8_t in5 = in[i + 5];
+		uint8_t in6 = in[i + 6];
+		uint8_t in7 = in[i + 7];
+
     	ap_uint<64> chunk = (in[i + 0], in[i + 1], in[i + 2], in[i + 3], in[i + 4], in[i + 5], in[i + 6], in[i + 7]);
     	ap_uint<5> opcode = 0;
     	uint8_t offset = 0;
@@ -24,16 +36,12 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 		appendOpcode(&opcode, &writeHead, &offset);
 		#pragma SDS wait(4)
 
-    	ap_uint<8> change = offset;
+    	uint8_t change = offset;
     	writeHead.offset = offset;
-    	extractAlignedData(&writeHead, writeHead, out, outputIterator);
-    	if(change != offset) {
+    	extractAlignedData(&writeHead, out, outputIterator);
+    	if(change != writeHead.offset) {
     		outputIterator += 8;
     	}
-
-		//    auto writeHead2 = (outputChunk*) sds_alloc(sizeof(outputChunk));
-		//    writeHead2 = writeHead;
-		std::cout<<"foobar";
 
 		#pragma SDS async(5)
 		appendWord(&chunk, &writeHead, &offset);
@@ -41,10 +49,20 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 
 		change = offset;
 		writeHead.offset = offset;
-		extractAlignedData(&writeHead, writeHead, out, outputIterator);
-		if(change != offset) {
+		extractAlignedData(&writeHead, out, outputIterator);
+		if(change != writeHead.offset) {
 			outputIterator += 8;
 		}
+
+		// debug
+		uint8_t out0 = out[outputIterator + 0];
+		uint8_t out1 = out[outputIterator + 1];
+		uint8_t out2 = out[outputIterator + 2];
+		uint8_t out3 = out[outputIterator + 3];
+		uint8_t out4 = out[outputIterator + 4];
+		uint8_t out5 = out[outputIterator + 5];
+		uint8_t out6 = out[outputIterator + 6];
+		uint8_t out7 = out[outputIterator + 7];
     }
 
     return 0;

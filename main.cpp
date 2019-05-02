@@ -34,6 +34,6 @@ int main(int argc, const char* argv[]){
     	std::cout << "unittests successfull!";
     }
 
-    std::cout << "All tests passes, YAAAYYY!";
+    std::cout << "All tests passed, YAAAYYY!";
     return 0;
 }

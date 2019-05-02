@@ -64,57 +64,6 @@ void appendWord(ap_uint<64> *chunkPointer, outputChunk *writeHead, uint8_t *offs
 	return;
 }
 
-
-////
-//////	writeHead->offset = 5;
-////
-//	// how many opcode bits fit into high?
-//	int numberOfBitsInHigh = CHUNK_SIZE_BITS - writeHead->offset;
-//	if(numberOfBitsInHigh < 0) {
-//		numberOfBitsInHigh = 0;
-//	}
-//	int numberOfBitsInLow = CHUNK_SIZE_BITS - numberOfBitsInHigh;
-////
-//	if(numberOfBitsInHigh > 0) {
-////		// fill high with chunk as far as possible
-//		if(writeHead->offset == 0) {
-//			writeHead->high = chunk;
-//			writeHead->offset += 64;
-//		}
-////		else {
-////			ap_uint<64> remainder = writeHead->high(CHUNK_START, CHUNK_START - writeHead->offset + 1);
-////			ap_uint<64> newBits = chunk(CHUNK_SIZE_BITS - 1, writeHead->offset);
-////			writeHead->high = (	writeHead->high(CHUNK_START, CHUNK_START - writeHead->offset + 1),
-////								chunk(CHUNK_START, writeHead->offset));
-////		}
-//	}
-////
-////	if(numberOfBitsInLow > 0) {
-////
-////		int lowOffset = (writeHead->offset - CHUNK_SIZE_BITS);
-////		if(lowOffset < 0) {
-////			lowOffset = 0;
-////		}
-////
-//////		// fill overflowing bits into low
-////		ap_uint<64> lowWord = chunk(CHUNK_START - numberOfBitsInHigh, 0);
-////
-////////		// shift bits to the start of low
-////			// this makes problems:
-////////		writeHead->low <<= numberOfBitsInHigh;
-////
-////		// this also is problematic
-////		// *returnValue = writeHead
-////		lowWord <<= numberOfBitsInHigh;
-////		writeHead->low = lowWord;
-////		writeHead->offset += 64;
-////	}
-////
-////	writeHead->offset += 64;
-//
-//	return;
-//}
-
 void appendOpcode(ap_uint<OPCODE_SIZE> *opcodePointer, outputChunk *writeHead, uint8_t *offset) {
 	ap_uint<OPCODE_SIZE> opcode = *opcodePointer;
 
@@ -209,9 +158,9 @@ ap_uint<8> extractOpcode(ap_uint<8> offset, ap_uint<16> input) {
 //    }
 //}
 
-void extractAlignedData(outputChunk *returnValue, outputChunk chunk, ap_uint<8> out[BLOCK_SIZE], uint32_t outputIterator) {
-	if(chunk.readyToExtract()) {
-		ap_uint<64> extractedSequence = chunk.extractHigh();
+void extractAlignedData(outputChunk *chunk, ap_uint<8> out[BLOCK_SIZE], uint32_t outputIterator) {
+	if(chunk->readyToExtract()) {
+		ap_uint<64> extractedSequence = chunk->extractHigh();
 		out[outputIterator + 0] = extractedSequence(63, 56);
 		out[outputIterator + 1] = extractedSequence(55, 48);
 		out[outputIterator + 2] = extractedSequence(47, 40);
@@ -221,6 +170,38 @@ void extractAlignedData(outputChunk *returnValue, outputChunk chunk, ap_uint<8> 
 		out[outputIterator + 6] = extractedSequence(15, 8);
 		out[outputIterator + 7] = extractedSequence(7, 0);
 	}
+}
 
-	*returnValue = chunk;
+void readCompressedChunk(	ap_uint<64> *i_data,
+							ap_uint<64> *o_chunk,
+							ap_uint<OPCODE_SIZE> *o_opcode,
+							uint8_t *io_offset) {
+
+	// remove offset from raw chunk
+	i_data[0] <<= *io_offset;
+
+	// acquire opcode bits
+	*o_opcode = i_data[0](CHUNK_START, CHUNK_START - OPCODE_SIZE);
+
+	// remove opcode from raw chunk
+	i_data[0] <<= OPCODE_SIZE;
+
+	// shift remaining bits in the second word of the raw chunk
+	i_data[1] >>= CHUNK_SIZE_BITS - (*io_offset + OPCODE_SIZE);
+
+	// add up raw chunk bits to chunk
+	*o_chunk = i_data[0] | i_data[1];
+	*io_offset += OPCODE_SIZE;
+	return;
+}
+
+void appendUncompressedChunk(ap_uint<64> chunk, ap_uint<8> out[BLOCK_SIZE], uint32_t outputIterator) {
+	out[outputIterator + 0] = chunk(63, 56);
+	out[outputIterator + 1] = chunk(55, 48);
+	out[outputIterator + 2] = chunk(47, 40);
+	out[outputIterator + 3] = chunk(39, 32);
+	out[outputIterator + 4] = chunk(31, 24);
+	out[outputIterator + 5] = chunk(23, 16);
+	out[outputIterator + 6] = chunk(15, 8);
+	out[outputIterator + 7] = chunk(7, 0);
 }
