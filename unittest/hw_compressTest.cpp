@@ -1,14 +1,16 @@
 #include <cstdlib>
 #include <vector>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
+
+//#include "sds_lib.h"
 
 #include "../hw842.h"
 #include "../settings.h"
 
-//#include "sds_lib.h"
-
 bool test_hw842_compress_smallInput() {
 
-//	void *inputMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *inputMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto inputBuffer = *(new(inputMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
@@ -23,7 +25,7 @@ bool test_hw842_compress_smallInput() {
     inputBuffer[7] = 226;
 
 
-//	void *expectedResultMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *expectedResultMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto expectedResult = *(new(expectedResultMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
     auto expectedResult = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
@@ -40,7 +42,7 @@ bool test_hw842_compress_smallInput() {
     expectedResult[8] = 16;
     expectedResult[9] = 0;
 
-//	void *outputBufferMemory = sds_alloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
+//	void *outputBufferMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
 //	auto outputBuffer = *(new(outputBufferMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
     auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
@@ -81,7 +83,7 @@ bool test_hw842_decompress_smallInput() {
 
     auto expectedResult = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
     //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-    memset(expectedResult, 0, sizeof(BLOCK_SIZE * sizeof(ap_uint<8>)));
+    memset(expectedResult, 0, BLOCK_SIZE * sizeof(ap_uint<8>));
     expectedResult[0] = 225;
     expectedResult[1] = 33;
     expectedResult[2] = 65;
@@ -93,7 +95,7 @@ bool test_hw842_decompress_smallInput() {
     expectedResult[8] = 0;
 
     auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
-    memset(outputBuffer, 0, sizeof(BLOCK_SIZE * sizeof(ap_uint<8>)));
+    memset(outputBuffer, 0, BLOCK_SIZE * sizeof(ap_uint<8>));
 
     hw842_decompress(&inputBuffer[0], &outputBuffer[0], BLOCK_SIZE);
 
@@ -108,7 +110,42 @@ bool test_hw842_decompress_smallInput() {
     return result;
 }
 
+bool test_compress_decompress_withRandomData() {
+	// declare databuffers
+	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+	auto expectedResult = (ap_uint<8>*) malloc(2 * BLOCK_SIZE * sizeof(ap_uint<8>));
+    auto intermediateBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+    auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+
+    // zero initialise data buffers
+    memset(inputBuffer, 0, BLOCK_SIZE * sizeof(ap_uint<8>));
+    memset(outputBuffer, 0, BLOCK_SIZE * sizeof(ap_uint<8>));
+    memset(intermediateBuffer, 0, BLOCK_SIZE * sizeof(ap_uint<8>));
+    memset(expectedResult, 0, BLOCK_SIZE * sizeof(ap_uint<8>));
+
+    srand (time(NULL));
+
+    // set random input buffer
+    for(int i = 0; i < BLOCK_SIZE; i++) {
+    	inputBuffer[i] = expectedResult[i] = rand();
+    }
+
+    hw842_compress(inputBuffer, intermediateBuffer, BLOCK_SIZE);
+    hw842_decompress(intermediateBuffer, outputBuffer, BLOCK_SIZE);
+
+    bool result = true;
+    for(int i = 0; i < 64; i++) {
+    	if(expectedResult[i] != outputBuffer[i]) {
+    		std::cout<<"array segment " << i << " differs: output: "<<outputBuffer[i]<<" expected: "<<expectedResult[i]<<std::endl;
+    		result = false;
+    	}
+    }
+
+    return result;
+}
+
 bool run_hw_compressTests() {
     return      test_hw842_compress_smallInput()
-            &&  test_hw842_decompress_smallInput();
+            &&  test_hw842_decompress_smallInput()
+			&&	test_compress_decompress_withRandomData();
 }

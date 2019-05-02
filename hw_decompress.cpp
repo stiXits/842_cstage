@@ -48,12 +48,10 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
     	ap_uint<5> opcode = 0;
 
 		readCompressedChunk(compressedData, &chunk, &opcode, &offset);
+
+		// do some real decompression here
+
 		appendUncompressedChunk(chunk, out, outputIterator);
-		outputIterator += 8;
-		if(offset >= 8) {
-			offset -= 8;
-			i += 1;
-		}
 
 		// debug
 		uint8_t out0 = out[outputIterator + 0];
@@ -64,6 +62,12 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
 		uint8_t out5 = out[outputIterator + 5];
 		uint8_t out6 = out[outputIterator + 6];
 		uint8_t out7 = out[outputIterator + 7];
+
+		outputIterator += 8;
+		if(offset >= 8) {
+			offset -= 8;
+			i += 1;
+		}
     }
 
     return 0;
