@@ -6,12 +6,11 @@
 //#include "sds_lib.h"
 
 #include "../hw842.h"
+#include "tools.h"
 #include "../settings.h"
 
 bool test_hw842_compress_smallInput() {
 
-//	void *inputMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
-//	auto inputBuffer = *(new(inputMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
     //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
@@ -32,8 +31,6 @@ bool test_hw842_compress_smallInput() {
     inputBuffer[14] = 193;
     inputBuffer[15] = 226;
 
-//	void *expectedResultMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
-//	auto expectedResult = *(new(expectedResultMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
     auto expectedResult = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
     //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000
@@ -58,8 +55,6 @@ bool test_hw842_compress_smallInput() {
     expectedResult[17] = 128;
     expectedResult[18] = 0;
 
-//	void *outputBufferMemory = malloc(BLOCK_SIZE * sizeof(ap_uint<8>) + sizeof(std::vector<ap_uint<8>>));
-//	auto outputBuffer = *(new(outputBufferMemory) std::vector<ap_uint<8>>(BLOCK_SIZE, 0));
     auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 
     for(int i = 0; i < 64; i++) {
@@ -67,18 +62,7 @@ bool test_hw842_compress_smallInput() {
     }
 
     hw842_compress(inputBuffer, outputBuffer, BLOCK_SIZE);
-
-    bool result = true;
-    for(int i = 0; i < 64; i++) {
-    	if(outputBuffer[i] != expectedResult[i]) {
-    		std::cout<<"array segments differ: output: "<<outputBuffer[i]<<" expected: "<<expectedResult[i]<<std::endl;
-    		result = false;
-    	}
-    }
-//    bool result = true;
-//    bool result = std::equal(outputBuffer.begin(), outputBuffer.begin() + BLOCK_SIZE, expectedResult.begin());
-
-    return result;
+    return assertArraysAreEqual(outputBuffer, expectedResult, BLOCK_SIZE);
 }
 
 bool test_hw842_decompress_smallInput() {
@@ -132,15 +116,7 @@ bool test_hw842_decompress_smallInput() {
 
     hw842_decompress(&inputBuffer[0], &outputBuffer[0], BLOCK_SIZE);
 
-    bool result = true;
-    for(int i = 0; i < 64; i++) {
-    	if(outputBuffer[i] != expectedResult[i]) {
-    		std::cout<<"array segment " << i << " differs: output: "<<outputBuffer[i]<<" expected: "<<expectedResult[i]<<std::endl;
-    		result = false;
-    	}
-    }
-
-    return result;
+    return assertArraysAreEqual(outputBuffer, expectedResult, BLOCK_SIZE);
 }
 
 bool test_compress_decompress_withRandomData() {
@@ -162,36 +138,11 @@ bool test_compress_decompress_withRandomData() {
     for(int i = 0; i < BLOCK_SIZE; i++) {
     	inputBuffer[i] = expectedResult[i] = rand();
     }
-//    inputBuffer[0] = expectedResult[0] = 225;
-//    inputBuffer[1] = expectedResult[1] = 33;
-//    inputBuffer[2] = expectedResult[2] = 65;
-//    inputBuffer[3] = expectedResult[3] = 97;
-//    inputBuffer[4] = expectedResult[4] = 129;
-//    inputBuffer[5] = expectedResult[5] = 161;
-//    inputBuffer[6] = expectedResult[6] = 193;
-//    inputBuffer[7] = expectedResult[7] = 226;
-//    inputBuffer[8] = expectedResult[8] = 225;
-//    inputBuffer[9] = expectedResult[9] = 33;
-//    inputBuffer[10] = expectedResult[10] = 65;
-//    inputBuffer[11] = expectedResult[11] = 97;
-//    inputBuffer[12] = expectedResult[12] = 129;
-//    inputBuffer[13] = expectedResult[13] = 161;
-//    inputBuffer[14] = expectedResult[14] = 193;
-//    inputBuffer[15] = expectedResult[15] = 226;
 
     hw842_compress(inputBuffer, intermediateBuffer, BLOCK_SIZE);
     hw842_decompress(intermediateBuffer, outputBuffer, BLOCK_SIZE);
 
-    bool result = true;
-    for(int i = 0; i < 64; i++) {
-    	if(expectedResult[i] != outputBuffer[i]) {
-    		std::cout<<"array segment " << i << " differs: output: "
-    				 << outputBuffer[i] << " expected: " << expectedResult[i] << std::endl;
-    		result = false;
-    	}
-    }
-
-    return result;
+    return assertArraysAreEqual(outputBuffer, expectedResult, BLOCK_SIZE);
 }
 
 bool run_hw_compressTests() {

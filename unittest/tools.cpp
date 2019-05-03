@@ -2,24 +2,16 @@
 
 #include "ap_int.h"
 
-//bool assertArraysAreEqual(ap_uint<8>* array0, ap_uint<8>* array1, int size) {
-//
-//    bool testResult = true;
-//
-//    for(int i = 0; i < size; i++) {
-//        testResult &= array0[i] == array1[i];
-//    }
-//
-//    return testResult;
-//}
+bool assertArraysAreEqual(ap_uint<8> *toCheck, ap_uint<8> *reference, int size) {
 
-bool assertArraysAreEqual(ap_uint<8> *array0, ap_uint<8> *array1, int size) {
-
-    bool testResult = true;
-
-    for(int i = 0; i < size; i++) {
-        testResult &= array0[i] == array1[i];
+    bool result = true;
+    for(int i = 0; i < 64; i++) {
+    	if(reference[i] != toCheck[i]) {
+    		std::cout<<"array segment " << i << " differs: output: "
+    				 << toCheck[i] << " expected: " << reference[i] << std::endl;
+    		result = false;
+    	}
     }
 
-    return testResult;
+    return result;
 }
