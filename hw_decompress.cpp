@@ -25,7 +25,7 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
     uint32_t outputIterator = 0;
     uint8_t offset = 0;
 
-    for(uint8_t i = 0; i <= blockSize - 16; i += CHUNK_SIZE + 2)
+    for(uint8_t i = 0; i <= blockSize; i += CHUNK_SIZE)
     {
 
     	// debug
