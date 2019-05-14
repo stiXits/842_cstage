@@ -14,5 +14,5 @@ void RingBuffer::add(const ap_uint<CHUNK_SIZE> *i_fragment) {
 }
 
 const void RingBuffer::get(const uint16_t i_index, ap_uint<CHUNK_SIZE> *o_fragment) {
-	o_fragment[index] = *o_fragment;
+	*o_fragment = buffer[i_index];
 }
