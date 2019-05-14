@@ -1,13 +1,16 @@
 #include "hw842.h"
 
-//#include "sds_lib.h"
 #include "ap_int.h"
 
 #include "io.h"
+#include "ringbuffer.h"
+#include "addresscache.h"
 
 //#pragma SDS data mem_attribute(in:PHYSICAL_CONTIGUOUS,out:PHYSICAL_CONTIGUOUS)
 int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], uint32_t blockSize)
 {
+//	RingBuffer buffer;
+
     // append chunk as all (D8) data action
     const ap_uint<8> opCode = 0;
 

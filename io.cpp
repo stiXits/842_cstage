@@ -6,23 +6,6 @@
 
 #define CHUNK_START (CHUNK_SIZE_BITS - 1)
 
-void appendUncompressedByte(const ap_uint<8> *source, ap_uint<8> *destination0, ap_uint<8> *destination1, const ap_uint<8> &offset){
-
-    // copy source chunk
-    ap_uint<8> rightshifted = *source;
-    ap_uint<8> leftshifted = *source;
-
-    // shift content behind existing content in destination0
-    rightshifted = rightshifted >> offset;
-
-    // copy overflowing bits to destination1 (the follow up byte)
-    leftshifted = leftshifted << (8 - offset);
-
-    // add zeropadded, shifted content to destination 0
-    *destination0 = *destination0 | rightshifted;
-    *destination1 = leftshifted;
-}
-
 void appendWord(ap_uint<64> *chunkPointer, outputChunk *writeHead, uint8_t *offset) {
 	ap_uint<64> chunk = *chunkPointer;
 //	uint8_t offset = writeHead->offset;
@@ -115,49 +98,6 @@ void appendOpcode(ap_uint<OPCODE_SIZE> *opcodePointer, outputChunk *writeHead, u
 	*offset += OPCODE_SIZE;
 }
 
-//uint8_t appendChunk(ap_uint<CHUNK_SIZE_BITS> *opcode, ap_uint<CHUNK_SIZE_BITS> *chunkPointer, outputChunk *writeHead) {
-//	uint8_t offset = appendOpcode(opcode, writeHead);
-//	writeHead->offset = offset;
-//	offset = appendWord(chunkPointer, writeHead);
-//
-//	return offset;
-//}
-
-ap_uint<8> readNextCompressedByte(inputChunkPointer &readHead, const ap_uint<16> input) {
-
-    uint16_t input_readable = input;
-
-	ap_uint<8> start = 15 - readHead.offset;
-	ap_uint<8> end = 15 - readHead.offset - 7;
-
-    // shift bytes, to align them
-    ap_uint<8> output = input(start, end);
-
-    return output;
-}
-
-ap_uint<8> extractOpcode(ap_uint<8> offset, ap_uint<16> input) {
-
-	ap_uint<8> start = 15 - offset;
-	ap_uint<8> end = 15 - offset - 4;
-
-    return input(start, end);
-}
-
-//void readNextCompressedChunk(inputChunkPointer &readHead, const ap_uint<8>* input, struct chunk &outputChunk) {
-//
-//	ap_uint<8> lsB = *(input + readHead.byteIndex);
-//	ap_uint<8> msB = *(input + readHead.byteIndex + 1);
-//    outputChunk.opCode = extractOpcode(readHead.offset, (lsB,msB));
-//    readHead.increment(5);
-//
-//    for(int byteIndex = 0; byteIndex < CHUNK_SIZE; byteIndex++) {
-//        ap_uint<8> byte = readNextCompressedByte(readHead, (input[readHead.lsB()], input[readHead.msB()]));
-//        *(outputChunk.data + byteIndex) = byte;
-//        readHead.increment(8);
-//    }
-//}
-
 void extractAlignedData(outputChunk *chunk, ap_uint<8> out[BLOCK_SIZE], uint32_t outputIterator) {
 	if(chunk->readyToExtract()) {
 		ap_uint<64> extractedSequence = chunk->extractHigh();
@@ -172,25 +112,27 @@ void extractAlignedData(outputChunk *chunk, ap_uint<8> out[BLOCK_SIZE], uint32_t
 	}
 }
 
-void readCompressedChunk(	ap_uint<64> *i_data,
+void readCompressedChunk(	const ap_uint<64> i_data[2],
 							ap_uint<64> *o_chunk,
 							ap_uint<OPCODE_SIZE> *o_opcode,
 							uint8_t *io_offset) {
+	ap_uint<64> high = i_data[0];
+	ap_uint<64> low = i_data[1];
 
 	// remove offset from raw chunk
-	i_data[0] <<= *io_offset;
+	high <<= *io_offset;
 
 	// acquire opcode bits
-	*o_opcode = i_data[0](CHUNK_START, CHUNK_START - OPCODE_SIZE);
+	*o_opcode = high(CHUNK_START, CHUNK_START - OPCODE_SIZE);
 
 	// remove opcode from raw chunk
-	i_data[0] <<= OPCODE_SIZE;
+	high <<= OPCODE_SIZE;
 
 	// shift remaining bits in the second word of the raw chunk
-	i_data[1] >>= CHUNK_SIZE_BITS - (*io_offset + OPCODE_SIZE);
+	low >>= CHUNK_SIZE_BITS - (*io_offset + OPCODE_SIZE);
 
 	// add up raw chunk bits to chunk
-	*o_chunk = i_data[0] | i_data[1];
+	*o_chunk = high | low;
 	*io_offset += OPCODE_SIZE;
 	return;
 }

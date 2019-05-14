@@ -1,10 +1,11 @@
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <iostream>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <iostream>
-#include <vector>
+//#include <vector>
+//#include <sys/time.h>
 
 #include "settings.h"
 #include "unittest/test.h"
@@ -14,10 +15,18 @@
 
 //#define USEHW
 
-
 long long currentTimestamp() {
     return 1000000000;
 }
+int _gettimeofday( struct timeval *tv, void *tzvp )
+{
+    return currentTimestamp();
+} // end _gettimeofday()
+
+int _gettimeofday_r( struct timeval *tv, void *tzvp )
+{
+    return currentTimestamp();
+} // end _gettimeofday()
 
 int nextMultipleOfBlockSize(unsigned int input) {
     return (input + (BLOCK_SIZE-1)) & ~(BLOCK_SIZE-1);
