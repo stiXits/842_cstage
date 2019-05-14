@@ -9,7 +9,7 @@
 //#pragma SDS data mem_attribute(in:PHYSICAL_CONTIGUOUS,out:PHYSICAL_CONTIGUOUS)
 int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], uint32_t blockSize)
 {
-//	RingBuffer buffer;
+	auto buffer = new RingBuffer();
 
     // append chunk as all (D8) data action
     const ap_uint<8> opCode = 0;
@@ -58,6 +58,15 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 			outputIterator += 8;
 		}
 
+		buffer->add(&in[i + 0]);
+		buffer->add(&in[i + 1]);
+		buffer->add(&in[i + 2]);
+		buffer->add(&in[i + 3]);
+		buffer->add(&in[i + 4]);
+		buffer->add(&in[i + 5]);
+		buffer->add(&in[i + 6]);
+		buffer->add(&in[i + 7]);
+
 		// debug
 		uint8_t out0 = out[outputIterator + 0];
 		uint8_t out1 = out[outputIterator + 1];
@@ -68,6 +77,8 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 		uint8_t out6 = out[outputIterator + 6];
 		uint8_t out7 = out[outputIterator + 7];
     }
+
+    delete buffer;
 
     return 0;
 

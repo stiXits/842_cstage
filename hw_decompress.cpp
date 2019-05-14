@@ -1,10 +1,13 @@
 #include "hw842.h"
 #include "io.h"
 #include "settings.h"
+#include "ringbuffer.h"
 
 //#pragma SDS data mem_attribute(in:PHYSICAL_CONTIGUOUS,in:PHYSICAL_CONTIGUOUS)
 int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], uint32_t blockSize)
 {
+	auto buffer = new RingBuffer();
+
     uint32_t outputIterator = 0;
     uint8_t offset = 0;
 
@@ -46,6 +49,15 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
 		uint8_t out6 = out[outputIterator + 6];
 		uint8_t out7 = out[outputIterator + 7];
 
+		buffer->add(&in[i + 0]);
+		buffer->add(&in[i + 1]);
+		buffer->add(&in[i + 2]);
+		buffer->add(&in[i + 3]);
+		buffer->add(&in[i + 4]);
+		buffer->add(&in[i + 5]);
+		buffer->add(&in[i + 6]);
+		buffer->add(&in[i + 7]);
+
 		// TODO: #1
 		outputIterator += 8;
 		if(offset >= 8) {
@@ -53,6 +65,8 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
 			i += 1;
 		}
     }
+
+    delete buffer;
 
     return 0;
 }
