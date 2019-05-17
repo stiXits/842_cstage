@@ -2,35 +2,38 @@
 
 #include "stdint.h"
 
-void AddressCache::get(ap_uint<CHUNK_SIZE> *i_fragment, ap_uint<8> *o_address) {
+AddressCache::AddressCache() {
+
+}
+
+AddressCache::~AddressCache() {
+
+}
+
+void AddressCache::get(ap_uint<CHUNK_SIZE> *i_fragment, ap_uint<8> *o_address, bool *valid) {
 
 	// maybe use ap int with log(CACHE_SIZE) bits
 	for(uint16_t i; i < CACHE_SIZE; i++) {
 		if(this->fragments[i] == *i_fragment) {
 			*o_address = this->adresses[i];
+			*valid = true;
+			return;
 		}
 		else {
-			o_address = NULL;
+			*valid = false;
 		}
 	}
 }
 
 void AddressCache::set(ap_uint<CHUNK_SIZE> *i_fragment, ap_uint<8> *i_address) {
-	for(uint16_t i; i < CACHE_SIZE; i++) {
-		if(this->fragments[i] == NULL) {
-			this->fragments[i] = *i_fragment;
-			this->adresses[i] = *i_fragment;
 
-			// clear out next array element for reeeaaally simple aging
+			this->fragments[agingIndex] = *i_fragment;
+			this->adresses[agingIndex] = *i_address;
 
-			// do it like a ring buffer
-			if(i == CACHE_SIZE - 1) {
-				this->fragments[0] = NULL;
-				this->adresses[0] = NULL;
-			} else {
-				this->fragments[i + 1] = NULL;
-				this->adresses[i+ 1] = NULL;
+			if(agingIndex == CACHE_SIZE - 1) {
+				agingIndex = 0;
 			}
-		}
-	}
+			else {
+				agingIndex++;
+			}
 }

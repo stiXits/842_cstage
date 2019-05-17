@@ -2,6 +2,7 @@
 //#include "sw_compressTest.h"
 #include "hw_compressTest.h"
 #include "ringbufferTest.h"
+#include "cacheTest.h"
 
 bool runTests() {
 
@@ -9,5 +10,6 @@ bool runTests() {
     return run_IoTests()
             //&& run_sw_compressTests()
 			&& run_hw_compressTests()
-			&& run_ringbufferTests();
+			&& run_ringbufferTests()
+			&& run_cacheTests();
 }
