@@ -10,6 +10,7 @@
 int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], uint32_t blockSize)
 {
 	auto buffer = new RingBuffer();
+	auto cache = new AddressCache();
 
     // append chunk as all (D8) data action
     const ap_uint<8> opCode = 0;
@@ -18,7 +19,7 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
    	uint8_t offset = 0;
     uint32_t outputIterator = 0;
 
-    for(uint8_t i = 0; i <= blockSize; i += CHUNK_SIZE)
+    for(uint32_t i = 0; i <= blockSize; i += CHUNK_SIZE)
     {
 
     	// debug
@@ -32,6 +33,20 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 		uint8_t in7 = in[i + 7];
 
     	ap_uint<64> chunk = (in[i + 0], in[i + 1], in[i + 2], in[i + 3], in[i + 4], in[i + 5], in[i + 6], in[i + 7]);
+
+    	// check for cache hit
+    	bool valid = false;
+    	ap_uint<8> cachedAddress = 0;
+    	cache->get(&chunk, &cachedAddress, &valid);
+
+    	if(valid) {
+    		std::cout << "cache hit!" << std::endl;
+    	} else {
+    		// this is not correct yet! just testing
+    		ap_uint<8> index = i;
+    		cache->set(&chunk, &index);
+    	}
+
     	ap_uint<5> opcode = 0;
 
 		#pragma SDS async(4)
