@@ -36,16 +36,18 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 
     	// check for cache hit
     	bool valid = false;
-    	ap_uint<8> cachedAddress = 0;
+    	uint32_t cachedAddress = 0;
     	cache->get(&chunk, &cachedAddress, &valid);
 
     	if(valid) {
     		std::cout << "cache hit!" << std::endl;
     	} else {
     		// this is not correct yet! just testing
-    		ap_uint<8> index = i;
+    		uint32_t index;
+    		buffer->getCurrentIndex(&index);
     		cache->set(&chunk, &index);
     	}
+		buffer->add(&chunk);
 
     	ap_uint<5> opcode = 0;
 
@@ -72,15 +74,6 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 		if(change != writeHead.offset) {
 			outputIterator += 8;
 		}
-
-		buffer->add(&in[i + 0]);
-		buffer->add(&in[i + 1]);
-		buffer->add(&in[i + 2]);
-		buffer->add(&in[i + 3]);
-		buffer->add(&in[i + 4]);
-		buffer->add(&in[i + 5]);
-		buffer->add(&in[i + 6]);
-		buffer->add(&in[i + 7]);
 
 		// debug
 		uint8_t out0 = out[outputIterator + 0];

@@ -10,7 +10,7 @@ AddressCache::~AddressCache() {
 
 }
 
-void AddressCache::get(ap_uint<CHUNK_SIZE_BITS> *i_fragment, ap_uint<8> *o_address, bool *valid) {
+void AddressCache::get(ap_uint<CHUNK_SIZE_BITS> *i_fragment, uint32_t *o_address, bool *valid) {
 
 	// maybe use ap int with log(CACHE_SIZE) bits
 	for(uint16_t i; i < CACHE_SIZE; i++) {
@@ -25,7 +25,7 @@ void AddressCache::get(ap_uint<CHUNK_SIZE_BITS> *i_fragment, ap_uint<8> *o_addre
 	}
 }
 
-void AddressCache::set(ap_uint<CHUNK_SIZE_BITS> *i_fragment, ap_uint<8> *i_address) {
+void AddressCache::set(ap_uint<CHUNK_SIZE_BITS> *i_fragment, uint32_t *i_address) {
 
 			this->fragments[agingIndex] = *i_fragment;
 			this->adresses[agingIndex] = *i_address;

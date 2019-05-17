@@ -7,10 +7,10 @@
 bool test_getElement_hit() {
 	AddressCache cache;
 	ap_uint<CHUNK_SIZE_BITS> fragment = 42;
-	ap_uint<8> address = 56;
+	uint32_t address = 56;
 	bool valid = false;
 
-	ap_uint<8> retrievedAddress = NULL;
+	uint32_t retrievedAddress;
 
 	cache.set(&fragment, &address);
 	cache.get(&fragment, &retrievedAddress, &valid);
@@ -23,12 +23,12 @@ bool test_getElement_hit() {
 
 bool test_getElement_hit_fullCache() {
 	AddressCache cache;
-	ap_uint<8> retrievedAddress = NULL;
+	uint32_t retrievedAddress = NULL;
 	ap_uint<CHUNK_SIZE_BITS> insertFragment = 0;
 	ap_uint<CHUNK_SIZE_BITS> fragment = CACHE_SIZE - 2;
 	bool valid = false;
 
-	for(ap_uint<8> i = 0; i < CACHE_SIZE; i++) {
+	for(uint32_t i = 0; i < CACHE_SIZE; i++) {
 		cache.set(&insertFragment, &i);
 		insertFragment++;
 	}
@@ -43,12 +43,12 @@ bool test_getElement_hit_fullCache() {
 
 bool test_getElement_miss() {
 	AddressCache cache;
-	ap_uint<8> retrievedAddress = NULL;
+	uint32_t retrievedAddress = NULL;
 	ap_uint<CHUNK_SIZE_BITS> insertFragment = 0;
 	ap_uint<CHUNK_SIZE_BITS> fragment = CACHE_SIZE;
 	bool valid = false;
 
-	for(ap_uint<8> i = 0; i < CACHE_SIZE; i++) {
+	for(uint32_t i = 0; i < CACHE_SIZE; i++) {
 		cache.set(&insertFragment, &i);
 		insertFragment++;
 	}
@@ -62,12 +62,12 @@ bool test_getElement_miss() {
 
 bool test_getElement_miss_agedOut() {
 	AddressCache cache;
-	ap_uint<8> retrievedAddress = NULL;
+	uint32_t retrievedAddress = NULL;
 	ap_uint<CHUNK_SIZE_BITS> insertFragment = 0;
 	ap_uint<CHUNK_SIZE_BITS> fragment = 0;
 	bool valid = false;
 
-	for(ap_uint<8> i = 0; i < CACHE_SIZE + 1; i++) {
+	for(uint32_t i = 0; i < CACHE_SIZE + 1; i++) {
 		cache.set(&insertFragment, &i);
 		insertFragment++;
 	}
