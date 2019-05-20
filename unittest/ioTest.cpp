@@ -1,13 +1,17 @@
+// testing framework
+#include "catch.hpp"
+
+// module to test
 #include "../io.h"
 
-//#include <cstdlib>
+// fundamentals
 #include <stdint.h>
-
 #include "ap_int.h"
+
+// helpers
 #include "tools.h"
 
-bool test_appendCompressedChunk_noOffset() {
-
+TEST_CASE( "Append compressed chunk", "[IO]" ) {
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
@@ -27,14 +31,12 @@ bool test_appendCompressedChunk_noOffset() {
     uint64_t highi = writeHead->high;
     uint64_t offsetti = *offset;
 
-    bool lowtest = writeHead->low == low;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == CHUNK_SIZE_BITS;
-
-    return lowtest && highTest && offsetTest;
+	REQUIRE(writeHead->low == low);
+	REQUIRE(writeHead->high == high);
+	REQUIRE(offsetti == CHUNK_SIZE_BITS);
 }
 
-bool test_appendCompressedChunk_offset() {
+TEST_CASE( "Append compressed chunk with offset", "[IO]" ) {
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
@@ -54,14 +56,12 @@ bool test_appendCompressedChunk_offset() {
     uint64_t highi = writeHead->high;
     uint64_t offsetti = *offset;
 
-    bool lowtest = writeHead->low == low;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == CHUNK_SIZE_BITS + 5;
-
-    return lowtest && highTest && offsetTest;
+    REQUIRE(writeHead->low == low);
+    REQUIRE(writeHead->high == high);
+    REQUIRE(offsetti == CHUNK_SIZE_BITS + 5);
 }
 
-bool test_appendCompressedChunk_onlyLow() {
+TEST_CASE( "Append compressed chunk low word", "[IO]" ) {
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
@@ -81,15 +81,17 @@ bool test_appendCompressedChunk_onlyLow() {
     uint64_t highi = writeHead->high;
     uint64_t offsetti = *offset;
 
-    bool lowtest = writeHead->low == low;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS;
+//    debug
+//    bool lowtest = writeHead->low == low;
+//    bool highTest = writeHead->high == high;
+//	  bool offsetTest = offsetti == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS;
 
-    return lowtest && highTest && offsetTest;
+	REQUIRE(writeHead->low == low);
+	REQUIRE(writeHead->high == high);
+	REQUIRE(offsetti == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS);
 }
 
-bool test_appendOpcode_noOffset() {
-
+TEST_CASE( "Append opcode with no offset", "[IO]" ) {
 	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b11111;
@@ -111,15 +113,17 @@ bool test_appendOpcode_noOffset() {
     uint64_t highi = writeHead->high;
     uint64_t offsetti = *offset;
 
-    bool lowtest = writeHead->low == 0;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == OPCODE_SIZE;
+//    debug
+//    bool lowtest = writeHead->low == 0;
+//    bool highTest = writeHead->high == high;
+//	  bool offsetTest = offsetti == OPCODE_SIZE;
 
-    return lowtest && highTest && offsetTest;
+    REQUIRE(writeHead->low == 0);
+    REQUIRE(writeHead->high == high);
+    REQUIRE(offsetti == OPCODE_SIZE);
 }
 
-bool test_appendOpcode_offset() {
-
+TEST_CASE( "Append opcode with offset", "[IO]" ) {
 	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b11111;
@@ -139,15 +143,17 @@ bool test_appendOpcode_offset() {
     uint64_t highi = writeHead->high;
     uint64_t offsetti = *offset;
 
-    bool lowtest = writeHead->low == 0;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == 10 + OPCODE_SIZE;
+//    debug
+//    bool lowtest = writeHead->low == 0;
+//    bool highTest = writeHead->high == high;
+//	  bool offsetTest = offsetti == 10 + OPCODE_SIZE;
 
-    return lowtest && highTest && offsetTest;
+    REQUIRE(writeHead->low == 0);
+    REQUIRE(writeHead->high == high);
+    REQUIRE(offsetti == 10 + OPCODE_SIZE);
 }
 
-bool test_appendOpcode_overlappingOffset() {
-
+TEST_CASE( "Append opcode with overlapping offset", "[IO]" ) {
 	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b11111;
@@ -167,14 +173,17 @@ bool test_appendOpcode_overlappingOffset() {
     uint64_t highi = writeHead->high;
     uint64_t offsetti = *offset;
 
-    bool lowtest = writeHead->low == low;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == 61 + OPCODE_SIZE;
+//    debug
+//    bool lowtest = writeHead->low == low;
+//    bool highTest = writeHead->high == high;
+//	  bool offsetTest = offsetti == 61 + OPCODE_SIZE;
 
-    return lowtest && highTest && offsetTest;
+    REQUIRE(writeHead->low == low);
+	REQUIRE(writeHead->high == high);
+	REQUIRE(offsetti == 61 + OPCODE_SIZE);
 }
 
-bool test_appendOpcode_onlyLow() {
+TEST_CASE( "Append opcode chunk low word", "[IO]" ) {
 	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b11111;
@@ -194,14 +203,17 @@ bool test_appendOpcode_onlyLow() {
     uint64_t highi = writeHead->high;
     uint64_t offsetti = *offset;
 
-    bool lowtest = writeHead->low == low;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == CHUNK_SIZE_BITS + OPCODE_SIZE;
+//    debug
+//    bool lowtest = writeHead->low == low;
+//    bool highTest = writeHead->high == high;
+//	  bool offsetTest = offsetti == CHUNK_SIZE_BITS + OPCODE_SIZE;
 
-    return lowtest && highTest && offsetTest;
+    REQUIRE(writeHead->low == low);
+    REQUIRE(writeHead->high == high);
+    REQUIRE(offsetti == CHUNK_SIZE_BITS + OPCODE_SIZE);
 }
 
-bool test_appendOpcode_offsetLow() {
+TEST_CASE( "Append opcode with offset in low word", "[IO]" ) {
 	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b11111;
@@ -221,14 +233,17 @@ bool test_appendOpcode_offsetLow() {
     uint64_t highi = writeHead->high;
     uint64_t offsetti = *offset;
 
-    bool lowtest = writeHead->low == low;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == 74 + OPCODE_SIZE;
+//    debug
+//    bool lowtest = writeHead->low == low;
+//    bool highTest = writeHead->high == high;
+//	  bool offsetTest = offsetti == 74 + OPCODE_SIZE;
 
-    return lowtest && highTest && offsetTest;
+    REQUIRE(writeHead->low == low);
+    REQUIRE(writeHead->high == high);
+    REQUIRE(offsetti == 74 + OPCODE_SIZE);
 }
 
-bool test_appendOpcodeAndChunk() {
+TEST_CASE( "Append opcode and compressed", "[IO]" ) {
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
@@ -261,15 +276,17 @@ bool test_appendOpcodeAndChunk() {
     highi = writeHead->high;
     offsetti = *offset;
 
-    bool lowtest = writeHead->low == low;
-    bool highTest = writeHead->high == high;
-	bool offsetTest = offsetti == CHUNK_SIZE_BITS + 5;
+//    debug
+//    bool lowtest = writeHead->low == low;
+//    bool highTest = writeHead->high == high;
+//	  bool offsetTest = offsetti == CHUNK_SIZE_BITS + 5;
 
-
-    return lowtest && highTest && offsetTest;
+	REQUIRE(writeHead->low == low);
+	REQUIRE(writeHead->high == high);
+	REQUIRE(offsetti == CHUNK_SIZE_BITS + 5);
 }
 
-bool test_readCompressedChunk_noOffset() {
+TEST_CASE( "Read compressed chunk with no offset", "[IO]" ) {
 	auto payload = (ap_uint<64>*) malloc(2 * sizeof(ap_uint<64>));
 	auto chunk = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
@@ -290,16 +307,17 @@ bool test_readCompressedChunk_noOffset() {
 	uint8_t offsetti = *offset;
 	uint8_t opcodei = *opcode;
 
-    bool chunkTest = *chunk == expectedResult;
-    bool opcodeTest = *opcode == 0b11111;
-	bool offsetTest = *offset == OPCODE_SIZE;
+//	  debug
+//    bool chunkTest = *chunk == expectedResult;
+//    bool opcodeTest = *opcode == 0b11111;
+//	  bool offsetTest = *offset == OPCODE_SIZE;
 
-
-    return chunkTest && opcodeTest && offsetTest;
-
+	REQUIRE(*chunk == expectedResult);
+	REQUIRE(*opcode == 0b11111);
+	REQUIRE(*offset == OPCODE_SIZE);
 }
 
-bool test_readCompressedChunk_offset() {
+TEST_CASE( "Read compressed chunk with offset", "[IO]" ) {
 	auto payload = (ap_uint<64>*) malloc(2 * sizeof(ap_uint<64>));
 	auto chunk = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
@@ -320,23 +338,24 @@ bool test_readCompressedChunk_offset() {
 	uint8_t offsetti = *offset;
 	uint8_t opcodei = *opcode;
 
+//	  debug
     bool chunkTest = *chunk == expectedResult;
     bool opcodeTest = *opcode == 0b11111;
 	bool offsetTest = *offset == 6 + OPCODE_SIZE;
 
-
-    return chunkTest && opcodeTest && offsetTest;
-
+	REQUIRE(*chunk == expectedResult);
+	REQUIRE(*opcode == 0b11111);
+	REQUIRE(*offset == 6 + OPCODE_SIZE);
 }
 
-bool test_readCompressedChunk_largeOffset() {
+TEST_CASE( "Read compressed chunk with large offset", "[IO]" ) {
 	auto payload = (ap_uint<64>*) malloc(2 * sizeof(ap_uint<64>));
 	auto chunk = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
 	//    11111|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000 00000|000
-	payload[0] = 0b1111111111111100001001000010100000101100001100000011010000111111;
+	payload[0] = 0b1111111111111100001001000010100000101100001100000011010000111011;
 	payload[1] = 0b1110000100100001010000010110000110000001101000011100000111100010;
 	*opcode = 0;
 	*offset = 64 - OPCODE_SIZE;
@@ -350,26 +369,12 @@ bool test_readCompressedChunk_largeOffset() {
 	uint8_t offsetti = *offset;
 	uint8_t opcodei = *opcode;
 
-    bool chunkTest = *chunk == expectedResult;
-    bool opcodeTest = *opcode == 0b11111;
-	bool offsetTest = *offset == 64;
+//	  debug
+//    bool chunkTest = *chunk == expectedResult;
+//    bool opcodeTest = *opcode == 0b11111;
+//	  bool offsetTest = *offset == 64;
 
-    return chunkTest && opcodeTest && offsetTest;
-}
-
-bool run_IoTests() {
-    return test_appendCompressedChunk_noOffset()
-           && test_appendCompressedChunk_offset()
-		   && test_appendCompressedChunk_onlyLow()
-
-		   && test_appendOpcode_noOffset()
-		   && test_appendOpcode_offset()
-		   && test_appendOpcode_overlappingOffset()
-		   && test_appendOpcode_onlyLow()
-		   && test_appendOpcode_offsetLow()
-		   && test_appendOpcodeAndChunk()
-
-		   && test_readCompressedChunk_noOffset()
-		   && test_readCompressedChunk_offset();
-
+    REQUIRE(*chunk == expectedResult);
+    REQUIRE(*opcode == 0b11011);
+    REQUIRE(*offset == 64);
 }

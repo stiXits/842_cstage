@@ -1,10 +1,13 @@
-#include "cacheTest.h"
+// testing framework
+#include "catch.hpp"
 
+// module to test
 #include "../addresscache.h"
 
+// fundamentals
 #include "ap_int.h"
 
-bool test_getElement_hit() {
+TEST_CASE( "Get element: cache hit", "[AddressCache]" ) {
 	AddressCache cache;
 	ap_uint<CHUNK_SIZE_BITS> fragment = 42;
 	uint32_t address = 56;
@@ -18,10 +21,11 @@ bool test_getElement_hit() {
 	bool validTest = valid == true;
 	bool hitTest = address == retrievedAddress;
 
-	return hitTest && validTest;
+	REQUIRE(hitTest);
+	REQUIRE(validTest);
 }
 
-bool test_getElement_hit_fullCache() {
+TEST_CASE( "Get element: cache hit with full cache", "[AddressCache]" ) {
 	AddressCache cache;
 	uint32_t retrievedAddress = NULL;
 	ap_uint<CHUNK_SIZE_BITS> insertFragment = 0;
@@ -38,10 +42,11 @@ bool test_getElement_hit_fullCache() {
 	bool validTest = valid == true;
 	bool hitTest = fragment == retrievedAddress;
 
-	return hitTest && validTest;
+	REQUIRE(hitTest);
+	REQUIRE(validTest);
 }
 
-bool test_getElement_miss() {
+TEST_CASE( "Get element: cache miss", "[AddressCache]" ) {
 	AddressCache cache;
 	uint32_t retrievedAddress = NULL;
 	ap_uint<CHUNK_SIZE_BITS> insertFragment = 0;
@@ -57,10 +62,10 @@ bool test_getElement_miss() {
 
 	bool validTest = valid == false;
 
-	return validTest;
+	REQUIRE(validTest);
 }
 
-bool test_getElement_miss_agedOut() {
+TEST_CASE( "Get element: cache miss, element aged out", "[AddressCache]" ) {
 	AddressCache cache;
 	uint32_t retrievedAddress = NULL;
 	ap_uint<CHUNK_SIZE_BITS> insertFragment = 0;
@@ -76,13 +81,5 @@ bool test_getElement_miss_agedOut() {
 
 	bool validTest = valid == false;
 
-	return validTest;
-}
-
-bool run_cacheTests() {
-    return     test_getElement_hit()
-    		&& test_getElement_hit_fullCache()
-    		&& test_getElement_miss()
-			&& test_getElement_miss_agedOut();
-
+	REQUIRE(validTest);
 }
