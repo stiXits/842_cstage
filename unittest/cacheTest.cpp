@@ -67,7 +67,7 @@ TEST_CASE( "Get element: cache miss", "[AddressCache]" ) {
 
 TEST_CASE( "Get element: cache miss, element aged out", "[AddressCache]" ) {
 	AddressCache cache;
-	uint32_t retrievedAddress = NULL;
+	uint32_t retrievedAddress;
 	ap_uint<CHUNK_SIZE_BITS> insertFragment = 0;
 	ap_uint<CHUNK_SIZE_BITS> fragment = 0;
 	bool valid = false;

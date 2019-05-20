@@ -32,6 +32,8 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 		uint8_t in6 = in[i + 6];
 		uint8_t in7 = in[i + 7];
 
+		// D8 action for now
+    	ap_uint<5> opcode = 0;
     	ap_uint<64> chunk = (in[i + 0], in[i + 1], in[i + 2], in[i + 3], in[i + 4], in[i + 5], in[i + 6], in[i + 7]);
 
     	// check for cache hit
@@ -41,6 +43,10 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
 
     	if(valid) {
     		std::cout << "cache hit!" << std::endl;
+
+    		// use index action 0x19:  { I8, N0, N0, N0 }, 8 bits
+    		opcode = 0x19;
+    		chunk = cachedAddress;
     	} else {
     		// this is not correct yet! just testing
     		uint32_t index;
@@ -48,8 +54,6 @@ int hw842_compress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], 
     		cache->set(&chunk, &index);
     	}
 		buffer->add(&chunk);
-
-    	ap_uint<5> opcode = 0;
 
 		#pragma SDS async(4)
 		appendOpcode(&opcode, &writeHead, &offset);

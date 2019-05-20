@@ -13,7 +13,7 @@
 #include "tools.h"
 #include "../settings.h"
 
-TEST_CASE( "Compress small input", "[Compress/Decompress]" ) {
+TEST_CASE( "Compress small input no index actions", "[Compress/Decompress]" ) {
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 	initArray(inputBuffer, BLOCK_SIZE, 0);
 
@@ -28,7 +28,7 @@ TEST_CASE( "Compress small input", "[Compress/Decompress]" ) {
     inputBuffer[7] = 226;
     inputBuffer[8] = 225;
     inputBuffer[9] = 33;
-    inputBuffer[10] = 65;
+    inputBuffer[10] = 66;
     inputBuffer[11] = 97;
     inputBuffer[12] = 129;
     inputBuffer[13] = 161;
@@ -52,7 +52,7 @@ TEST_CASE( "Compress small input", "[Compress/Decompress]" ) {
     expectedResult[9] = 56;
     expectedResult[10] = 72;
     expectedResult[11] = 80;
-    expectedResult[12] = 88;
+    expectedResult[12] = 152;
     expectedResult[13] = 96;
     expectedResult[14] = 104;
     expectedResult[15] = 112;
@@ -65,7 +65,76 @@ TEST_CASE( "Compress small input", "[Compress/Decompress]" ) {
 
     hw842_compress(inputBuffer, outputBuffer, BLOCK_SIZE);
 
-    bool arrayTest =  assertArraysAreEqual(outputBuffer, expectedResult, BLOCK_SIZE);
+    // don't veerify whole block, zeroes are beeing replaced with index actions
+    // which will be subject to an explicit test
+    bool arrayTest =  assertArraysAreEqual(outputBuffer, expectedResult, 17);
+
+    free(inputBuffer);
+    free(expectedResult);
+    free(outputBuffer);
+
+    REQUIRE(arrayTest);
+}
+
+TEST_CASE( "Compress small input with I8 index actions", "[Compress/Decompress]" ) {
+	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+	initArray(inputBuffer, BLOCK_SIZE, 0);
+
+    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+    inputBuffer[0] = 225;
+    inputBuffer[1] = 33;
+    inputBuffer[2] = 65;
+    inputBuffer[3] = 97;
+    inputBuffer[4] = 129;
+    inputBuffer[5] = 161;
+    inputBuffer[6] = 193;
+    inputBuffer[7] = 226;
+    inputBuffer[8] = 225;
+    inputBuffer[9] = 33;
+    inputBuffer[10] = 65;
+    inputBuffer[11] = 97;
+    inputBuffer[12] = 129;
+    inputBuffer[13] = 161;
+    inputBuffer[14] = 193;
+    inputBuffer[15] = 226;
+
+    auto expectedResult = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+    initArray(expectedResult, BLOCK_SIZE, 0);
+    //      7          9        10        11        12       13        14          15
+    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010
+    // opcode|      chunk
+
+    // chunk with index opcode referencing the first 64 bit in the ringbuffer
+    //  110 01|000000 00|0000000 0|0000000 0|0000000 0|0000000 0|0000000 0|0000000
+    //  opcode
+    expectedResult[0] = 7;
+    expectedResult[1] = 9;
+    expectedResult[2] = 10;
+    expectedResult[3] = 11;
+    expectedResult[4] = 12;
+    expectedResult[5] = 13;
+    expectedResult[6] = 14;
+    expectedResult[7] = 15;
+    expectedResult[8] = 22;
+    expectedResult[9] = 64;
+    expectedResult[10] = 0;
+    expectedResult[11] = 0;
+    expectedResult[12] = 0;
+    expectedResult[13] = 0;
+    expectedResult[14] = 0;
+    expectedResult[15] = 0;
+    expectedResult[16] = 0;
+    expectedResult[17] = 0;
+    expectedResult[18] = 0;
+
+    auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+    initArray(outputBuffer, BLOCK_SIZE, 0);
+
+    hw842_compress(inputBuffer, outputBuffer, BLOCK_SIZE);
+
+    // don't veerify whole block, zeroes are beeing replaced with index actions
+    // which will be subject to an explicit test
+    bool arrayTest =  assertArraysAreEqual(outputBuffer, expectedResult, 17);
 
     free(inputBuffer);
     free(expectedResult);
@@ -77,7 +146,7 @@ TEST_CASE( "Compress small input", "[Compress/Decompress]" ) {
 TEST_CASE( "Decompress small input", "[Compress/Decompress]" ) {
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
     //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000      00111|000 01001|000 01010|000 01011|000 01100|000 01101|000 01110|000 01111|000 10000|000
-    // opcode|      chunk																					56      72		  80		88			96		104			112		120			128
+    // opcode|      chunk																				56      72		  80		88			96		104			112		120			128
 	initArray(inputBuffer, BLOCK_SIZE, 0);
     inputBuffer[0] = 7;
     inputBuffer[1] = 9;
