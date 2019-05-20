@@ -1,15 +1,19 @@
+// testing framework
+#include "catch.hpp"
+
+// fundamentals
 #include <cstdlib>
-#include <vector>
 #include <stdlib.h>
 
 //#include "sds_lib.h"
 
 #include "../hw842.h"
+
+// helpers
 #include "tools.h"
 #include "../settings.h"
 
-bool test_hw842_compress_smallInput() {
-
+TEST_CASE( "Compress small input", "[Compress/Decompress]" ) {
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 	initArray(inputBuffer, BLOCK_SIZE, 0);
 
@@ -67,11 +71,10 @@ bool test_hw842_compress_smallInput() {
     free(expectedResult);
     free(outputBuffer);
 
-    return arrayTest;
+    REQUIRE(arrayTest);
 }
 
-bool test_hw842_decompress_smallInput() {
-
+TEST_CASE( "Decompress small input", "[Compress/Decompress]" ) {
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
     //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000      00111|000 01001|000 01010|000 01011|000 01100|000 01101|000 01110|000 01111|000 10000|000
     // opcode|      chunk																					56      72		  80		88			96		104			112		120			128
@@ -130,10 +133,10 @@ bool test_hw842_decompress_smallInput() {
     free(expectedResult);
     free(outputBuffer);
 
-    return arrayTest;
+    REQUIRE(arrayTest);
 }
 
-bool test_compress_decompress_withRandomData() {
+TEST_CASE( "Compress & Decompress random data", "[Compress/Decompress]" ) {
 	// declare databuffers
 	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
 	auto expectedResult = (ap_uint<8>*) malloc(2 * BLOCK_SIZE * sizeof(ap_uint<8>));
@@ -163,11 +166,5 @@ bool test_compress_decompress_withRandomData() {
     free(intermediateBuffer);
     free(outputBuffer);
 
-    return arrayTest;
-}
-
-bool run_hw_compressTests() {
-    return      test_hw842_compress_smallInput()
-            &&  test_hw842_decompress_smallInput()
-			&&	test_compress_decompress_withRandomData();
+    REQUIRE(arrayTest);
 }

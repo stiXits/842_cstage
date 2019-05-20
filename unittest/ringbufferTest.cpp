@@ -1,11 +1,16 @@
-#include "ringbufferTest.h"
+// testing framework
+#include "catch.hpp"
 
-#include "stdint.h"
-
-#include "../settings.h"
+// module to test
 #include "../ringbuffer.h"
 
-bool test_addMaxElements() {
+// fundamentals
+#include "stdint.h"
+
+// global magic numbers
+#include "../settings.h"
+
+TEST_CASE( "Append elements till buffer is full", "[RingBuffer]" ) {
 	RingBuffer buffer;
 
 	for(ap_uint<CHUNK_SIZE_BITS> i = 0; i < RINGBUFFER_SIZE; i++) {
@@ -22,10 +27,10 @@ bool test_addMaxElements() {
 		}
 	}
 
-	return bufferTest;
+	REQUIRE(bufferTest);
 }
 
-bool test_overWriteElements() {
+TEST_CASE( "Append elements and overwrite existing", "[RingBuffer]" ) {
 	RingBuffer buffer;
 
 	for(ap_uint<CHUNK_SIZE_BITS> i = 0; i < RINGBUFFER_SIZE * 2; i++) {
@@ -42,11 +47,5 @@ bool test_overWriteElements() {
 		}
 	}
 
-	return bufferTest;
-}
-
-bool run_ringbufferTests() {
-    return     test_addMaxElements()
-    		&& test_overWriteElements();
-
+	REQUIRE(bufferTest);
 }
