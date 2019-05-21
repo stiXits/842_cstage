@@ -13,7 +13,7 @@ void RingBuffer::add(const ap_uint<CHUNK_SIZE_BITS> *i_fragment) {
 	index = (index + 1) % RINGBUFFER_SIZE;
 }
 
-const void RingBuffer::get(const uint16_t i_index, ap_uint<CHUNK_SIZE_BITS> *o_fragment) {
+const void RingBuffer::get(const uint64_t i_index, ap_uint<CHUNK_SIZE_BITS> *o_fragment) {
 	*o_fragment = buffer[i_index];
 }
 

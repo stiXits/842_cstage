@@ -37,6 +37,12 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
 
 		// do some real decompression here
 
+		// index I8 chunk
+		if(opcode == 0x19) {
+			uint64_t index = chunk;
+			buffer->get(index, &chunk);
+		}
+
 		appendUncompressedChunk(chunk, out, outputIterator);
 		buffer->add(&chunk);
 
