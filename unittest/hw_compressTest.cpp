@@ -301,3 +301,46 @@ TEST_CASE( "Compress & Decompress random data", "[Compress/Decompress]" ) {
 
     REQUIRE(arrayTest);
 }
+
+TEST_CASE( "Compress & Decompress small input with I8 index actions", "[Compress/Decompress]" ) {
+	auto inputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+	initArray(inputBuffer, BLOCK_SIZE, 0);
+
+    //        11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
+    inputBuffer[0] = 225;
+    inputBuffer[1] = 33;
+    inputBuffer[2] = 65;
+    inputBuffer[3] = 97;
+    inputBuffer[4] = 129;
+    inputBuffer[5] = 161;
+    inputBuffer[6] = 193;
+    inputBuffer[7] = 226;
+    inputBuffer[8] = 225;
+    inputBuffer[9] = 33;
+    inputBuffer[10] = 65;
+    inputBuffer[11] = 97;
+    inputBuffer[12] = 129;
+    inputBuffer[13] = 161;
+    inputBuffer[14] = 193;
+    inputBuffer[15] = 226;
+
+    auto intermediateBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+    initArray(intermediateBuffer, BLOCK_SIZE, 0);
+
+    auto outputBuffer = (ap_uint<8>*) malloc(BLOCK_SIZE * sizeof(ap_uint<8>));
+    initArray(outputBuffer, BLOCK_SIZE, 0);
+
+    hw842_compress(inputBuffer, intermediateBuffer, BLOCK_SIZE);
+    hw842_decompress(intermediateBuffer, outputBuffer, BLOCK_SIZE);
+
+    // don't veerify whole block, zeroes are beeing replaced with index actions
+    // which will be subject to an explicit test
+    bool arrayTest =  assertArraysAreEqual(outputBuffer, inputBuffer, 16);
+
+    free(inputBuffer);
+    free(intermediateBuffer);
+    free(outputBuffer);
+
+    REQUIRE(arrayTest);
+}
+
