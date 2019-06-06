@@ -1,22 +1,15 @@
 #include "ringbuffer.h"
 
-RingBuffer::RingBuffer() : buffer(new ap_uint<CHUNK_SIZE_BITS>[RINGBUFFER_SIZE]) {
-
+//#pragma SDS data mem_attribute(i_fragment:PHYSICAL_CONTIGUOUS, ringBuffer:PHYSICAL_CONTIGUOUS)
+void addToRingBuffer(ap_uint<CHUNK_SIZE_BITS> *i_fragment, RingBuffer& ringBufferMeta, ap_uint<CHUNK_SIZE_BITS> buffer[RINGBUFFER_SIZE]) {
+	buffer[ringBufferMeta.index] = *i_fragment;
+	ap_uint<64> newIndex = ringBufferMeta.index + 1;
+	newIndex = newIndex % RINGBUFFER_SIZE;
+	ringBufferMeta.index = newIndex;
 }
 
-RingBuffer::~RingBuffer() {
-	delete[] buffer;
-}
-
-void RingBuffer::add(const ap_uint<CHUNK_SIZE_BITS> *i_fragment) {
-	buffer[index] = *i_fragment;
-	index = (index + 1) % RINGBUFFER_SIZE;
-}
-
-const void RingBuffer::get(const uint64_t i_index, ap_uint<CHUNK_SIZE_BITS> *o_fragment) {
+void getFromRingBuffer(	const uint64_t i_index,
+								ap_uint<CHUNK_SIZE_BITS> *o_fragment,
+								ap_uint<CHUNK_SIZE_BITS> buffer[RINGBUFFER_SIZE]) {
 	*o_fragment = buffer[i_index];
-}
-
-void RingBuffer::getCurrentIndex(uint32_t *o_index) {
-	*o_index = this->index;
 }
