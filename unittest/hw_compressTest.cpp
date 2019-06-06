@@ -1,5 +1,5 @@
 // testing framework
-#include "catch.hpp"
+#include "../Catch2/single_include/catch2/catch.hpp"
 
 // fundamentals
 #include <cstdlib>
@@ -43,6 +43,7 @@ public:
 		uncompressed[15] = 226;
 
 	    //  00000|111 00001|001 00001|010 00001|011 00001|100 00001|101 00001|110 00001|111 00010|000
+		//      7         9         10        11        12        13        14        15        16
 	    // opcode|      chunk
 		compressed[0] = 7;
 		compressed[1] = 9;
@@ -155,7 +156,7 @@ TEST_CASE_METHOD(Fixture, "Decompress small input", "[Compress/Decompress]" ) {
 
     // To the moment there is some bit garbage at the end of the block due to mismatching strides
     // TODO: #1
-    hw842_decompress(&inputBuffer[0], &outputBuffer[0], BLOCK_SIZE);
+    hw842_decompress(inputBuffer, outputBuffer, BLOCK_SIZE);
 
     //debug
     bool arrayTest = assertArraysAreEqual(outputBuffer, expectedResult, BLOCK_SIZE - 5);
@@ -177,7 +178,7 @@ TEST_CASE_METHOD(Fixture, "Decompress small input with I8 index actions", "[Comp
 
     // To the moment there is some bit garbage at the end of the block due to mismatching strides
     // TODO: #1
-    hw842_decompress(&inputBuffer[0], &outputBuffer[0], BLOCK_SIZE);
+    hw842_decompress(inputBuffer, outputBuffer, BLOCK_SIZE);
 
     //debug
     bool arrayTest = assertArraysAreEqual(outputBuffer, expectedResult, BLOCK_SIZE - 5);

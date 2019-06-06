@@ -3,7 +3,9 @@
 #include "stdint.h"
 
 AddressCache::AddressCache() {
-
+	for(uint32_t i; i < CACHE_SIZE; i++) {
+		this->valid[i] = false;
+	}
 }
 
 AddressCache::~AddressCache() {
@@ -14,7 +16,7 @@ void AddressCache::get(ap_uint<CHUNK_SIZE_BITS> *i_fragment, uint32_t *o_address
 
 	// maybe use ap int with log(CACHE_SIZE) bits
 	for(uint16_t i; i < CACHE_SIZE; i++) {
-		if(this->fragments[i] == *i_fragment) {
+		if(this->valid[i] && this->fragments[i] == *i_fragment) {
 			*o_address = this->adresses[i];
 			*valid = true;
 			return;
@@ -29,6 +31,7 @@ void AddressCache::set(ap_uint<CHUNK_SIZE_BITS> *i_fragment, uint32_t *i_address
 
 			this->fragments[agingIndex] = *i_fragment;
 			this->adresses[agingIndex] = *i_address;
+			this->valid[agingIndex] = true;
 
 			if(agingIndex == CACHE_SIZE - 1) {
 				agingIndex = 0;

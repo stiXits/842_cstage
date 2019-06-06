@@ -1,12 +1,14 @@
 
 #include "settings.h"
 #include "ap_int.h"
+#include "stdint.h"
 
 class AddressCache {
 
 private:
 	ap_uint<CHUNK_SIZE_BITS> fragments[CACHE_SIZE];
 	uint32_t adresses[CACHE_SIZE];
+	bool valid[CACHE_SIZE];
 
 	uint16_t agingIndex = 0;
 
