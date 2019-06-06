@@ -1,5 +1,5 @@
 // testing framework
-#include "catch.hpp"
+#include "../Catch2/single_include/catch2/catch.hpp"
 
 // module to test
 #include "../addresscache.h"

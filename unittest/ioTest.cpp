@@ -1,5 +1,5 @@
 // testing framework
-#include "catch.hpp"
+#include "../Catch2/single_include/catch2/catch.hpp"
 
 // module to test
 #include "../io.h"
@@ -10,6 +10,23 @@
 
 // helpers
 #include "tools.h"
+
+class TestFixture {};
+
+void appendWordWrapper(ap_uint<64> *chunkPointer, outputChunk *writeHead, uint8_t *offset) {
+	appendWord(chunkPointer, writeHead, offset);
+}
+
+void readCompressedChunkWrapper(	const ap_uint<64> i_data[2],
+							ap_uint<64> *o_chunk,
+							ap_uint<OPCODE_SIZE> *o_opcode,
+							uint8_t *io_offset) {
+	readCompressedChunk(i_data, o_chunk, o_opcode, io_offset);
+}
+
+void appendOpcodeWrapper(ap_uint<OPCODE_SIZE> *opcodePointer, outputChunk *writeHead, uint8_t *offset) {
+	appendOpcode(opcodePointer, writeHead, offset);
+}
 
 TEST_CASE( "Append compressed chunk", "[IO]" ) {
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
@@ -25,7 +42,7 @@ TEST_CASE( "Append compressed chunk", "[IO]" ) {
     writeHead->high = 0;
     *offset = 0;
 
-    appendWord(payload, writeHead, offset);
+    appendWordWrapper(payload, writeHead, offset);
 
     uint64_t lowi = writeHead->low;
     uint64_t highi = writeHead->high;
@@ -50,7 +67,7 @@ TEST_CASE( "Append compressed chunk with offset", "[IO]" ) {
     writeHead->high = 0b1111111111111111111111111111111111111111111111111111111111111111;
     *offset = 5;
 
-    appendWord(payload, writeHead, offset);
+    appendWordWrapper(payload, writeHead, offset);
 
     uint64_t lowi = writeHead->low;
     uint64_t highi = writeHead->high;
@@ -75,7 +92,7 @@ TEST_CASE( "Append compressed chunk low word", "[IO]" ) {
     writeHead->high = 0;
     *offset = CHUNK_SIZE_BITS;
 
-    appendWord(payload, writeHead, offset);
+    appendWordWrapper(payload, writeHead, offset);
 
     uint64_t lowi = writeHead->low;
     uint64_t highi = writeHead->high;
@@ -91,7 +108,7 @@ TEST_CASE( "Append compressed chunk low word", "[IO]" ) {
 	REQUIRE(offsetti == CHUNK_SIZE_BITS + CHUNK_SIZE_BITS);
 }
 
-TEST_CASE( "Append opcode with no offset", "[IO]" ) {
+TEST_CASE_METHOD(TestFixture, "Append opcode with no offset", "[IO]" ) {
 	auto payload = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
 	*payload = 0b11111;
@@ -106,7 +123,7 @@ TEST_CASE( "Append opcode with no offset", "[IO]" ) {
     *offset = 0;
 
 	#pragma SDS async(1)
-    appendOpcode(payload, writeHead, offset);
+    appendOpcodeWrapper(payload, writeHead, offset);
 	#pragma SDS wait(1)
 
     uint64_t lowi = writeHead->low;
@@ -137,7 +154,7 @@ TEST_CASE( "Append opcode with offset", "[IO]" ) {
     writeHead->high = 0;
     *offset = 10;
 
-    appendOpcode(payload, writeHead, offset);
+    appendOpcodeWrapper(payload, writeHead, offset);
 
     uint64_t lowi = writeHead->low;
     uint64_t highi = writeHead->high;
@@ -167,7 +184,7 @@ TEST_CASE( "Append opcode with overlapping offset", "[IO]" ) {
     writeHead->high = 0;
     *offset = 61;
 
-    appendOpcode(payload, writeHead, offset);
+    appendOpcodeWrapper(payload, writeHead, offset);
 
     uint64_t lowi = writeHead->low;
     uint64_t highi = writeHead->high;
@@ -197,7 +214,7 @@ TEST_CASE( "Append opcode chunk low word", "[IO]" ) {
     writeHead->high = 0;
     *offset = CHUNK_SIZE_BITS;
 
-    appendOpcode(payload, writeHead, offset);
+    appendOpcodeWrapper(payload, writeHead, offset);
 
     uint64_t lowi = writeHead->low;
     uint64_t highi = writeHead->high;
@@ -227,7 +244,7 @@ TEST_CASE( "Append opcode with offset in low word", "[IO]" ) {
     writeHead->high = 0;
     *offset = 74;
 
-    appendOpcode(payload, writeHead, offset);
+    appendOpcodeWrapper(payload, writeHead, offset);
 
     uint64_t lowi = writeHead->low;
     uint64_t highi = writeHead->high;
@@ -261,7 +278,7 @@ TEST_CASE( "Append opcode and compressed", "[IO]" ) {
     *offset = 0;
 
 	#pragma SDS async(3)
-	appendOpcode(opcode, writeHead, offset);
+	appendOpcodeWrapper(opcode, writeHead, offset);
 	#pragma SDS wait(3)
 
 	uint64_t lowi = writeHead->low;
@@ -269,7 +286,7 @@ TEST_CASE( "Append opcode and compressed", "[IO]" ) {
 	uint64_t offsetti = *offset;
 
 	#pragma SDS async(2)
-	appendWord(payload, writeHead, offset);
+	appendWordWrapper(payload, writeHead, offset);
 	#pragma SDS wait(2)
 
     lowi = writeHead->low;
@@ -300,7 +317,7 @@ TEST_CASE( "Read compressed chunk with no offset", "[IO]" ) {
 	*chunk = 0;
 
 	ap_uint<64> expectedResult = 0b1110000100100001010000010110000110000001101000011100000111100010;
-	readCompressedChunk(payload, chunk, opcode, offset);
+	readCompressedChunkWrapper(payload, chunk, opcode, offset);
 
 	// debug
 	uint64_t chunki = *chunk;
@@ -331,7 +348,7 @@ TEST_CASE( "Read compressed chunk with offset", "[IO]" ) {
 	*chunk = 0;
 
 	ap_uint<64> expectedResult = 0b1110000100100001010000010110000110000001101000011100000111100010;
-	readCompressedChunk(payload, chunk, opcode, offset);
+	readCompressedChunkWrapper(payload, chunk, opcode, offset);
 
 	// debug
 	uint64_t chunki = *chunk;
@@ -362,7 +379,7 @@ TEST_CASE( "Read compressed chunk with large offset", "[IO]" ) {
 	*chunk = 0;
 
 	ap_uint<64> expectedResult = 0b1110000100100001010000010110000110000001101000011100000111100010;
-	readCompressedChunk(payload, chunk, opcode, offset);
+	readCompressedChunkWrapper(payload, chunk, opcode, offset);
 
 	// debug
 	uint64_t chunki = *chunk;
