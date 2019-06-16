@@ -6,8 +6,9 @@
 
 #define CHUNK_START (CHUNK_SIZE_BITS - 1)
 
-void appendWord(ap_uint<64> *chunkPointer, outputChunk *writeHead, uint8_t *offset) {
-	ap_uint<64> chunk = *chunkPointer;
+void appendWord(uint64_t chunkT, outputChunk *writeHead, uint8_t *offset) {
+	ap_uint<64> chunk = (ap_uint<64>) chunkT;
+	ap_uint<64> high = writeHead->high;
 //	uint8_t offset = writeHead->offset;
 
 	// no offset
@@ -19,7 +20,7 @@ void appendWord(ap_uint<64> *chunkPointer, outputChunk *writeHead, uint8_t *offs
 
 		uint8_t toShift = CHUNK_SIZE_BITS - *offset;
 //		// set high
-		ap_uint<64> remainder = writeHead->high(CHUNK_START, CHUNK_START - *offset + 1);
+		ap_uint<64> remainder = high(CHUNK_START, CHUNK_START - *offset + 1);
 		remainder <<= toShift;
 
 		ap_uint<64> newBits = chunk(CHUNK_START, *offset);
@@ -49,6 +50,7 @@ void appendWord(ap_uint<64> *chunkPointer, outputChunk *writeHead, uint8_t *offs
 
 void appendOpcode(ap_uint<OPCODE_SIZE> *opcodePointer, outputChunk *writeHead, uint8_t *offset) {
 	ap_uint<OPCODE_SIZE> opcode = *opcodePointer;
+	ap_uint<64> high = writeHead->high;
 
 	// opcode fits into high
 	if(CHUNK_SIZE_BITS - *offset >= OPCODE_SIZE) {
@@ -76,7 +78,7 @@ void appendOpcode(ap_uint<OPCODE_SIZE> *opcodePointer, outputChunk *writeHead, u
 
 		if(numberOfBitsInHigh > 0) {
 								// offset bits
-			writeHead->high = (writeHead->high(CHUNK_SIZE_BITS - 1, numberOfBitsInHigh - 1),
+			writeHead->high = (uint64_t) (high(CHUNK_SIZE_BITS - 1, numberOfBitsInHigh - 1),
 								// opcode bits
 							  opcode(OPCODE_SIZE - 1, numberOfBitsInHigh - 1));
 		}
@@ -119,11 +121,13 @@ void readCompressedChunk(	const ap_uint<64> i_data[2],
 	ap_uint<64> high = i_data[0];
 	ap_uint<64> low = i_data[1];
 
+	uint8_t offseti = *io_offset;
+
 	// remove offset from raw chunk
 	high <<= *io_offset;
 
 	// acquire opcode bits
-	*o_opcode = high(CHUNK_START + 1, CHUNK_START - OPCODE_SIZE + 1);
+	*o_opcode = high(CHUNK_START, CHUNK_START - OPCODE_SIZE + 1);
 
 	// remove opcode from raw chunk
 	high <<= OPCODE_SIZE;

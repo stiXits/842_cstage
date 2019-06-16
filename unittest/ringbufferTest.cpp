@@ -5,6 +5,7 @@
 #include "../ringbuffer.h"
 
 // fundamentals
+//#include "sds_lib.h"
 #include "stdint.h"
 
 // global magic numbers
@@ -13,29 +14,29 @@
 void  addToRingBufferWrapper(	ap_uint<CHUNK_SIZE_BITS> *i_fragment,
 								RingBuffer& ringBufferMeta,
 								ap_uint<CHUNK_SIZE_BITS> buffer[RINGBUFFER_SIZE]) {
-	#pragma SDS async(10)
+//	#pragma SDS async(10)
 	addToRingBuffer(i_fragment, ringBufferMeta, buffer);
-	#pragma SDS wait(10)
+//	#pragma SDS wait(10)
 }
 
 const void getFromRingBufferWrapper(	const uint64_t i_index,
 								ap_uint<CHUNK_SIZE_BITS> *o_fragment,
 								ap_uint<CHUNK_SIZE_BITS> buffer[RINGBUFFER_SIZE]) {
-	#pragma SDS async(11)
+//	#pragma SDS async(11)
 	getFromRingBuffer(i_index, o_fragment, buffer);
-	#pragma SDS wait(11)
+//	#pragma SDS wait(11)
 }
 
 TEST_CASE( "Append elements till buffer is full", "[RingBuffer]" ) {
 
+	std::cout<<"Append elements till buffer is full"<<std::endl;
+
 	auto buffer = (ap_uint<CHUNK_SIZE_BITS>*) malloc(RINGBUFFER_SIZE*sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
-	auto *bufferMeta = (RingBuffer*) malloc(sizeof(RingBuffer));
-	auto bufferrMeta = new (buffer) RingBuffer();
-	bufferrMeta->index = 0;
+	auto bufferMeta = new RingBuffer();
 
 	for(ap_uint<CHUNK_SIZE_BITS> i = 0; i < RINGBUFFER_SIZE; i++) {
-		addToRingBufferWrapper(&i, *bufferrMeta, buffer);
+		addToRingBufferWrapper(&i, *bufferMeta, buffer);
 	}
 
 	bool bufferTest = true;
@@ -52,11 +53,10 @@ TEST_CASE( "Append elements till buffer is full", "[RingBuffer]" ) {
 }
 
 TEST_CASE( "Append elements and overwrite existing", "[RingBuffer]" ) {
+	std::cout<<"Append elements and overwrite existing"<<std::endl;
 	auto buffer = (ap_uint<CHUNK_SIZE_BITS>*) malloc(RINGBUFFER_SIZE*sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
-	auto *bufferMeta = (RingBuffer*) malloc(sizeof(RingBuffer));
-	auto bufferrMeta = new (buffer) RingBuffer();
-	bufferMeta->index = 0;
+	auto bufferMeta = new RingBuffer();
 
 	for(ap_uint<CHUNK_SIZE_BITS> i = 0; i < RINGBUFFER_SIZE; i++) {
 		addToRingBufferWrapper(&i, *bufferMeta, buffer);

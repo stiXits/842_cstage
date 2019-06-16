@@ -8,13 +8,17 @@
 #include <stdint.h>
 #include "ap_int.h"
 
+//#include "sds_lib.h"
+
 // helpers
 #include "tools.h"
 
 class TestFixture {};
 
-void appendWordWrapper(ap_uint<64> *chunkPointer, outputChunk *writeHead, uint8_t *offset) {
-	appendWord(chunkPointer, writeHead, offset);
+void appendWordWrapper(uint64_t chunk, outputChunk *writeHead, uint8_t *offset) {
+//	#pragma SDS async(2)
+	appendWord(chunk, writeHead, offset);
+//	#pragma SDS wait(2)
 }
 
 void readCompressedChunkWrapper(	const ap_uint<64> i_data[2],
@@ -25,17 +29,18 @@ void readCompressedChunkWrapper(	const ap_uint<64> i_data[2],
 }
 
 void appendOpcodeWrapper(ap_uint<OPCODE_SIZE> *opcodePointer, outputChunk *writeHead, uint8_t *offset) {
+//	#pragma SDS async(1)
 	appendOpcode(opcodePointer, writeHead, offset);
+//	#pragma SDS wait(1)
 }
 
 TEST_CASE( "Append compressed chunk", "[IO]" ) {
-	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	uint64_t payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b1110000100100001010000010110000110000001101000011100000111100010;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000000000000000000000000000000000000000000000000000000000;
+	uint64_t high = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	uint64_t low =  0b0000000000000000000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
@@ -54,13 +59,12 @@ TEST_CASE( "Append compressed chunk", "[IO]" ) {
 }
 
 TEST_CASE( "Append compressed chunk with offset", "[IO]" ) {
-	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	uint64_t payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b1111111100001001000010100000101100001100000011010000111000001111;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
+    uint64_t high = 0b1111111100001001000010100000101100001100000011010000111000001111;
+    uint64_t low =  0b0001000000000000000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
@@ -79,13 +83,12 @@ TEST_CASE( "Append compressed chunk with offset", "[IO]" ) {
 }
 
 TEST_CASE( "Append compressed chunk low word", "[IO]" ) {
-	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	uint64_t payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b1110000100100001010000010110000110000001101000011100000111100010;
+	uint64_t high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+	uint64_t low =  0b1110000100100001010000010110000110000001101000011100000111100010;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
@@ -114,17 +117,15 @@ TEST_CASE_METHOD(TestFixture, "Append opcode with no offset", "[IO]" ) {
 	*payload = 0b11111;
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b1111100000000000000000000000000000000000000000000000000000000000;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000000000000000000000000000000000000000000000000000000000;
+	uint64_t high = 0b1111100000000000000000000000000000000000000000000000000000000000;
+	uint64_t low =  0b0000000000000000000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
     writeHead->high = 0;
     *offset = 0;
 
-	#pragma SDS async(1)
     appendOpcodeWrapper(payload, writeHead, offset);
-	#pragma SDS wait(1)
 
     uint64_t lowi = writeHead->low;
     uint64_t highi = writeHead->high;
@@ -146,8 +147,8 @@ TEST_CASE( "Append opcode with offset", "[IO]" ) {
 	*payload = 0b11111;
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000111110000000000000000000000000000000000000000000000000;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000000000000000000000000000000000000000000000000000000000;
+	uint64_t high = 0b0000000000111110000000000000000000000000000000000000000000000000;
+	uint64_t low =  0b0000000000000000000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
@@ -176,8 +177,8 @@ TEST_CASE( "Append opcode with overlapping offset", "[IO]" ) {
 	*payload = 0b11111;
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000111;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b1100000000000000000000000000000000000000000000000000000000000000;
+	uint64_t high = 0b0000000000000000000000000000000000000000000000000000000000000111;
+	uint64_t low =  0b1100000000000000000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
@@ -206,8 +207,8 @@ TEST_CASE( "Append opcode chunk low word", "[IO]" ) {
 	*payload = 0b11111;
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b1111100000000000000000000000000000000000000000000000000000000000;
+	uint64_t high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+	uint64_t low =  0b1111100000000000000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
@@ -236,8 +237,8 @@ TEST_CASE( "Append opcode with offset in low word", "[IO]" ) {
 	*payload = 0b11111;
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b0000000000111110000000000000000000000000000000000000000000000000;
+	uint64_t high = 0b0000000000000000000000000000000000000000000000000000000000000000;
+	uint64_t low =  0b0000000000111110000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
@@ -261,33 +262,28 @@ TEST_CASE( "Append opcode with offset in low word", "[IO]" ) {
 }
 
 TEST_CASE( "Append opcode and compressed", "[IO]" ) {
-	auto payload = (ap_uint<CHUNK_SIZE_BITS>*) malloc(sizeof(ap_uint<CHUNK_SIZE_BITS>));
 	auto opcode = (ap_uint<OPCODE_SIZE>*) malloc(sizeof(ap_uint<OPCODE_SIZE>));
 	//          11100001  00100001  01000001  01100001  10000001  10100001  11000001  11100010
-	*payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
+	uint64_t payload = 0b1110000100100001010000010110000110000001101000011100000111100010;
 	*opcode = 0b11111;
 
 	auto offset = (uint8_t*) malloc(sizeof(uint8_t));
 
-    ap_uint<CHUNK_SIZE_BITS> high = 0b1111111100001001000010100000101100001100000011010000111000001111;
-    ap_uint<CHUNK_SIZE_BITS> low =  0b0001000000000000000000000000000000000000000000000000000000000000;
+	uint64_t high = 0b1111111100001001000010100000101100001100000011010000111000001111;
+	uint64_t low =  0b0001000000000000000000000000000000000000000000000000000000000000;
 
     auto writeHead = (outputChunk*) malloc(sizeof(outputChunk));
     writeHead->low = 0;
     writeHead->high = 0;
     *offset = 0;
 
-	#pragma SDS async(3)
 	appendOpcodeWrapper(opcode, writeHead, offset);
-	#pragma SDS wait(3)
 
 	uint64_t lowi = writeHead->low;
 	uint64_t highi = writeHead->high;
 	uint64_t offsetti = *offset;
 
-	#pragma SDS async(2)
 	appendWordWrapper(payload, writeHead, offset);
-	#pragma SDS wait(2)
 
     lowi = writeHead->low;
     highi = writeHead->high;

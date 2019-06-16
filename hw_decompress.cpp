@@ -1,5 +1,7 @@
 #include "hw842.h"
 
+//#include "sds_lib.h"
+
 #include "io.h"
 #include "ringbuffer.h"
 
@@ -8,14 +10,13 @@
 //#pragma SDS data mem_attribute(in:PHYSICAL_CONTIGUOUS,in:PHYSICAL_CONTIGUOUS)
 int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE], uint32_t blockSize)
 {
-	RingBuffer ringBufferMeta;
-	ringBufferMeta.index = 0;
+	auto ringBufferMeta = new RingBuffer();
 	auto buffer = (ap_uint<CHUNK_SIZE_BITS>*) malloc(RINGBUFFER_SIZE*sizeof(ap_uint<CHUNK_SIZE_BITS>));
 
     uint32_t outputIterator = 0;
     uint8_t offset = 0;
 
-    for(uint8_t i = 0; i <= blockSize; i += CHUNK_SIZE)
+    for(uint8_t i = 0; i <= blockSize - CHUNK_SIZE; i += CHUNK_SIZE)
     {
 
     	// debug
@@ -50,7 +51,7 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
 								in[i + 15]);
 
     	ap_uint<64> chunk = 0;
-    	ap_uint<5> opcode = 0;
+    	ap_uint<OPCODE_SIZE> opcode = 0;
 
 		readCompressedChunk(compressedData, &chunk, &opcode, &offset);
 
@@ -60,7 +61,7 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
 		if(opcode == 0x19) {
 			uint64_t index = chunk;
 //			#pragma SDS async(9)
-//			getFromRingBuffer(index, &chunk, buffer);
+			getFromRingBuffer(index, &chunk, buffer);
 //			#pragma SDS wait(9)
 			chunk = buffer[index];
 
@@ -69,7 +70,7 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
 		appendUncompressedChunk(chunk, out, outputIterator);
 
 //		#pragma SDS async(8)
-		addToRingBuffer(&chunk, ringBufferMeta, buffer);
+		addToRingBuffer(&chunk, *ringBufferMeta, buffer);
 //		#pragma SDS wait(8)
 
 		// debug
@@ -92,4 +93,3 @@ int hw842_decompress(const ap_uint<8> in[BLOCK_SIZE], ap_uint<8> out[BLOCK_SIZE]
 
     return 0;
 }
-
